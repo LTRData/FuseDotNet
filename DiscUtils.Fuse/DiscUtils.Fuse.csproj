@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\FuseDotNet.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FuseDotNet\FuseDotNet.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LTRData.DiscUtils.Core" Version="*" />
+    <PackageReference Include="LTRData.DiscUtils.Streams" Version="*" />
+    <PackageReference Include="LTRData.DiscUtils.VirtualFileSystem" Version="*" />
+    <PackageReference Include="LTRData.DiscUtils.Iso9660" Version="*" />
+    <PackageReference Include="System.Memory" Version="*" />
+  </ItemGroup>
+  
+</Project>
