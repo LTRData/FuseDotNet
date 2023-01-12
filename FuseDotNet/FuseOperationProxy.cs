@@ -406,7 +406,7 @@ internal sealed class FuseOperationProxy
             {
                 if (logger.DebugEnabled)
                 {
-                    logger.Debug($"{file}");
+                    logger.Debug($"Directory entry: {file}");
                 }
 
                 var fill_result = fuse_fill_dir(buf, file.Name, file.Stat, file.Offset, file.Flags);

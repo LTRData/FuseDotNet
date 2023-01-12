@@ -308,17 +308,17 @@ public class FuseDiscUtils : IFuseOperations
         if (FileSystem is IWindowsFileSystem wfs)
         {
             entries = FileSystem.GetFileSystemEntries(path)
-                .Select(FileSystem.GetFileSystemInfo)
-                .Where(dirEntry => dirEntry.Exists)
+                .Where(wfs.Exists)
+                .Select(wfs.GetFileSystemInfo)
                 .SelectMany(dirEntry =>
                 {
-                    if (dirEntry.Name is "." or "..")
+                    var fullPath = dirEntry.FullName;
+
+                    var rc = GetAttr(fullPath, out var stat);
+
+                    if (rc != PosixResult.Success)
                     {
-                        return Enumerable.Empty<FuseDirEntry>();
-                    }
-                    
-                    if (GetAttr(dirEntry.FullName, out var stat) != PosixResult.Success)
-                    {
+                        Trace(nameof(GetAttr), fullPath, rc);
                         return Enumerable.Empty<FuseDirEntry>();
                     }
 
@@ -329,11 +329,19 @@ public class FuseDiscUtils : IFuseOperations
 
                     var streamCount = 0L;
 
-                    return wfs.GetAlternateDataStreams(dirEntry.FullName).Select(stream =>
+                    return wfs.GetAlternateDataStreams(fullPath).Select(stream =>
                     {
-                        if (GetAttr(dirEntry.FullName, out var stat) != PosixResult.Success)
+                        var fullPath = $"{dirEntry.FullName}:{stream}";
+
+                        var name = $"{dirEntry.Name}:{stream}";
+
+                        var rc = GetAttr(fullPath, out var stat);
+
+                        if (rc != PosixResult.Success)
                         {
-                            return new FuseDirEntry($"{dirEntry.Name}:{stream}",
+                            Trace(nameof(GetAttr), fullPath, rc);
+
+                            return new FuseDirEntry(name,
                                                     0,
                                                     0,
                                                     info.Stat);
@@ -344,7 +352,7 @@ public class FuseDiscUtils : IFuseOperations
 
                         streamCount++;
 
-                        return new FuseDirEntry($"{dirEntry.Name}:{stream}",
+                        return new FuseDirEntry(name,
                                                 0,
                                                 FuseFillDirFlags.FillDirPlus,
                                                 stat);
@@ -354,12 +362,17 @@ public class FuseDiscUtils : IFuseOperations
         else
         {
             entries = FileSystem.GetFileSystemEntries(path)
+                .Where(dirEntry => Path.GetFileName(dirEntry) is not "." and not "..")
                 .Select(FileSystem.GetFileSystemInfo)
-                .Where(dirEntry => dirEntry.Name is not "." and not "..")
                 .Select(dirEntry =>
                 {
-                    if (GetAttr(dirEntry.FullName, out var stat) != PosixResult.Success)
+                    var fullPath = dirEntry.FullName;
+
+                    var rc = GetAttr(fullPath, out var stat);
+
+                    if (rc != PosixResult.Success)
                     {
+                        Trace(nameof(GetAttr), fullPath, rc);
                         return new FuseDirEntry(dirEntry.Name,
                                                 0,
                                                 0,
