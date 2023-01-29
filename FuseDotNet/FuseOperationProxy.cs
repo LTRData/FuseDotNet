@@ -35,7 +35,7 @@ internal sealed class FuseOperationProxy
         this.logger = logger;
     }
 
-    internal int readlink(IntPtr path, IntPtr target, IntPtr size)
+    internal int readlink(nint path, nint target, nint size)
     {
         try
         {
@@ -49,7 +49,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int link(IntPtr path, IntPtr target)
+    internal int link(nint path, nint target)
     {
         try
         {
@@ -63,7 +63,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int mkdir(IntPtr path, PosixFileMode mode)
+    internal int mkdir(nint path, PosixFileMode mode)
     {
         try
         {
@@ -77,7 +77,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int flush(IntPtr path, ref FuseFileInfo fileInfo)
+    internal int flush(nint path, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -91,7 +91,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int write(IntPtr path, IntPtr buffer, IntPtr size, long position, ref FuseFileInfo fileInfo)
+    internal int write(nint path, nint buffer, nint size, long position, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -110,7 +110,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int unlink(IntPtr path)
+    internal int unlink(nint path)
     {
         try
         {
@@ -124,7 +124,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int ioctl(IntPtr path, int cmd, IntPtr arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, IntPtr data)
+    internal int ioctl(nint path, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data)
     {
         try
         {
@@ -138,11 +138,11 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal unsafe int utimens(IntPtr path, IntPtr timespec, ref FuseFileInfo fileInfo)
+    internal unsafe int utimens(nint path, nint timespec, ref FuseFileInfo fileInfo)
     {
         try
         {
-            var ts = (TimeSpec*)timespec.ToPointer();
+            var ts = (TimeSpec*)timespec;
             var result = operations.UTime(FuseHelper.SpanFromIntPtr(path), atime: ts[0], mtime: ts[1], ref fileInfo);
             return -(int)result;
         }
@@ -153,7 +153,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int create(IntPtr path, PosixFileMode mode, ref FuseFileInfo fileInfo)
+    internal int create(nint path, PosixFileMode mode, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -167,7 +167,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int symlink(IntPtr path, IntPtr target)
+    internal int symlink(nint path, nint target)
     {
         try
         {
@@ -181,7 +181,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int rename(IntPtr path, IntPtr target)
+    internal int rename(nint path, nint target)
     {
         try
         {
@@ -195,7 +195,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int rmdir(IntPtr path)
+    internal int rmdir(nint path)
     {
         try
         {
@@ -209,7 +209,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int truncate(IntPtr path, long size)
+    internal int truncate(nint path, long size)
     {
         try
         {
@@ -223,7 +223,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int open(IntPtr path, ref FuseFileInfo fileInfo)
+    internal int open(nint path, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -237,7 +237,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int opendir(IntPtr path, ref FuseFileInfo fileInfo)
+    internal int opendir(nint path, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -251,7 +251,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int fsync(IntPtr path, int datasync, ref FuseFileInfo fileInfo)
+    internal int fsync(nint path, int datasync, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -265,7 +265,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int release(IntPtr path, ref FuseFileInfo fileInfo)
+    internal int release(nint path, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -279,7 +279,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int releasedir(IntPtr path, ref FuseFileInfo fileInfo)
+    internal int releasedir(nint path, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -293,21 +293,21 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal IntPtr init(ref FuseConnInfo fuse_conn_info)
+    internal nint init(ref FuseConnInfo fuse_conn_info)
     {
         try
         {
             operations.Init(ref fuse_conn_info);
-            return IntPtr.Zero;
+            return 0;
         }
         catch (Exception ex)
         {
             logger.Error($"init(): {ex}");
-            return IntPtr.Zero;
+            return 0;
         }
     }
 
-    internal int access(IntPtr path, PosixAccessMode mask)
+    internal int access(nint path, PosixAccessMode mask)
     {
         try
         {
@@ -321,7 +321,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal void destroy(IntPtr context)
+    internal void destroy(nint context)
     {
         try
         {
@@ -333,7 +333,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int fsyncdir(IntPtr path, int datasync, ref FuseFileInfo fileInfo)
+    internal int fsyncdir(nint path, int datasync, ref FuseFileInfo fileInfo)
     {
         try
         {
@@ -347,7 +347,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int statfs(IntPtr path, ref FuseVfsStat statvfs)
+    internal int statfs(nint path, ref FuseVfsStat statvfs)
     {
         try
         {
@@ -361,12 +361,12 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int getattr(IntPtr path, out FuseFileStat stat)
+    internal int getattr(nint path, nint statptr, ref FuseFileInfo fileInfo)
     {
-        stat = default;
         try
         {
-            var result = operations.GetAttr(FuseHelper.SpanFromIntPtr(path), out stat);
+            var result = operations.GetAttr(FuseHelper.SpanFromIntPtr(path), out var stat, ref fileInfo);
+            stat.MarshalToNative(statptr);
             return -(int)result;
         }
         catch (Exception ex)
@@ -376,7 +376,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int readdir(IntPtr path, IntPtr buf, IntPtr fuse_fill_dir_t, long offset, ref FuseFileInfo fileInfo, FuseReadDirFlags flags)
+    internal int readdir(nint path, nint buf, nint fuse_fill_dir_t, long offset, ref FuseFileInfo fileInfo, FuseReadDirFlags flags)
     {
         try
         {
@@ -431,7 +431,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int read(IntPtr path, IntPtr buffer, IntPtr size, long position, ref FuseFileInfo fileInfo)
+    internal int read(nint path, nint buffer, nint size, long position, ref FuseFileInfo fileInfo)
     {
         try
         {

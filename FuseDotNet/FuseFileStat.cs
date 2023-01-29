@@ -7,51 +7,160 @@ using System.Runtime.InteropServices;
 
 namespace FuseDotNet;
 
-[StructLayout(LayoutKind.Sequential, Pack = 4)]
-public unsafe struct FuseFileStat
+public struct FuseFileStat
 {
-    public override string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
-
-    static FuseFileStat()
+    unsafe static FuseFileStat()
     {
-        if (sizeof(FuseFileStat) != 224)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && RuntimeInformation.OSArchitecture == Architecture.X64)
         {
-            throw new PlatformNotSupportedException($"Invalid size of stat structure (running on 32 bit platform?)");
+            pMarshalToNative = (nint pNative, in FuseFileStat stat) => ((LinuxX64FileStat*)pNative)->Initialize(stat);
+        }
+#if NET6_0_OR_GREATER
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) && RuntimeInformation.OSArchitecture == Architecture.X64)
+        {
+            pMarshalToNative = (nint pNative, in FuseFileStat stat) => ((FreeBSDX64FileStat*)pNative)->Initialize(stat);
+        }
+#endif
+        else
+        {
+            throw new PlatformNotSupportedException("Current platform not supported by FuseDotNet library");
         }
     }
 
-    public long st_dev;               /* inode's device */
-    public long st_ino;               /* inode's number */
-    public long st_nlink;             /* number of hard links */
-    public PosixFileMode st_mode;      /* inode protection mode */
+    private delegate void fMarshalToNative(nint pNative, in FuseFileStat stat);
+
+    private static readonly fMarshalToNative pMarshalToNative;
+
+    public void MarshalToNative(nint pNative) => pMarshalToNative(pNative, this);
+
+    public long st_size { get; set; }
+    public long st_nlink { get; set; }
+    public PosixFileMode st_mode { get; set; }
+    public long st_gen { get; set; }
+    public TimeSpec st_birthtim { get; set; }
+    public TimeSpec st_atim { get; set; }
+    public TimeSpec st_ctim { get; set; }
+    public TimeSpec st_mtim { get; set; }
+    public long st_ino { get; set; }
+    public long st_dev { get; set; }
+    public long st_rdev { get; set; }
+    public uint st_uid { get; set; }
+    public uint st_gid { get; set; }
+    public int st_blksize { get; set; }
+    public long st_blocks { get; set; }
+}
+
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
+public struct FreeBSDX64FileStat
+{
+    public void Initialize(in FuseFileStat stat)
+    {
+        st_dev = stat.st_dev;
+        st_ino = stat.st_ino;
+        st_nlink = stat.st_nlink;
+        st_mode = stat.st_mode;
+        st_uid = stat.st_uid;
+        st_gid = stat.st_gid;
+        st_rdev = stat.st_rdev;
+        st_atim = stat.st_atim;
+        st_mtim = stat.st_mtim;
+        st_ctim = stat.st_ctim;
+        st_birthtim = stat.st_birthtim;
+        st_size = stat.st_size;
+        st_blocks = stat.st_blocks;
+        st_blksize = stat.st_blksize;
+        st_gen = stat.st_gen;
+    }
+
+    public override string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
+
+    unsafe static FreeBSDX64FileStat()
+    {
+        if (sizeof(FreeBSDX64FileStat) != 224)
+        {
+            throw new PlatformNotSupportedException($"Invalid size {sizeof(FreeBSDX64FileStat)} of stat structure, expected 224 (running on 32 bit platform?)");
+        }
+    }
+
+    public long st_dev { get; set; }            /* inode's device */
+    public long st_ino { get; set; }            /* inode's number */
+    public long st_nlink { get; set; }          /* number of hard links */
+    public PosixFileMode st_mode { get; set; }  /* inode protection mode */
     private readonly short st_padding0;
-    public uint st_uid;                /* user ID of the file's owner */
-    public uint st_gid;                /* group ID of the file's group */
+    public uint st_uid { get; set; }            /* user ID of the file's owner */
+    public uint st_gid { get; set; }            /* group ID of the file's group */
     private readonly int st_padding1;
-    public long st_rdev;              /* device type */
-    public TimeSpec st_atim;           /* time of last access */
-    public TimeSpec st_mtim;           /* time of last data modification */
-    public TimeSpec st_ctim;           /* time of last file status change */
-    public TimeSpec st_birthtim;       /* time of file creation */
-    public long st_size;               /* file size, in bytes */
-    public long st_blocks;             /* blocks allocated for file */
-    public int st_blksize;             /* optimal blocksize for I/O */
-    public uint st_flags;              /* user defined flags for file */
-    public long st_gen;               /* file generation number */
-    public fixed long st_spare[10];
+    public long st_rdev { get; set; }           /* device type */
+    public TimeSpec st_atim { get; set; }       /* time of last access */
+    public TimeSpec st_mtim { get; set; }       /* time of last data modification */
+    public TimeSpec st_ctim { get; set; }       /* time of last file status change */
+    public TimeSpec st_birthtim { get; set; }   /* time of file creation */
+    public long st_size { get; set; }           /* file size, in bytes */
+    public long st_blocks { get; set; }         /* blocks allocated for file */
+    public int st_blksize { get; set; }         /* optimal blocksize for I/O */
+    public uint st_flags;                       /* user defined flags for file */
+    public long st_gen { get; set; }            /* file generation number */
+    private unsafe fixed long st_spare[10];
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct LinuxX64FileStat
+{
+    public void Initialize(in FuseFileStat stat)
+    {
+        st_dev = stat.st_dev;
+        st_ino = stat.st_ino;
+        st_nlink = stat.st_nlink;
+        st_mode = stat.st_mode;
+        st_uid = stat.st_uid;
+        st_gid = stat.st_gid;
+        st_rdev = stat.st_rdev;
+        st_atim = stat.st_atim;
+        st_mtim = stat.st_mtim;
+        st_ctim = stat.st_ctim;
+        st_size = stat.st_size;
+        st_blocks = stat.st_blocks;
+        st_blksize = stat.st_blksize;
+    }
+
+    public override string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
+
+    unsafe static LinuxX64FileStat()
+    {
+        if (sizeof(LinuxX64FileStat) != 144)
+        {
+            throw new PlatformNotSupportedException($"Invalid size {sizeof(LinuxX64FileStat)} of stat structure, expected 144 (running on 32 bit platform?)");
+        }
+    }
+
+    public long st_dev { get; set; }            /* inode's device */
+    public long st_ino { get; set; }            /* inode's number */
+    public long st_nlink { get; set; }          /* number of hard links */
+    public PosixFileMode st_mode { get; set; }  /* inode protection mode */
+    public uint st_uid { get; set; }            /* user ID of the file's owner */
+    public uint st_gid { get; set; }            /* group ID of the file's group */
+    private readonly int pad0;
+    public long st_rdev { get; set; }           /* device type */
+    public long st_size { get; set; }           /* file size, in bytes */
+    public int st_blksize { get; set; }         /* optimal blocksize for I/O */
+    public long st_blocks { get; set; }         /* blocks allocated for file */
+    public TimeSpec st_atim { get; set; }       /* time of last access */
+    public TimeSpec st_mtim { get; set; }       /* time of last data modification */
+    public TimeSpec st_ctim { get; set; }       /* time of last file status change */
+    private unsafe fixed long __glibc_reserved[3];
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 public readonly struct TimeSpec : IEquatable<TimeSpec>, IComparable<TimeSpec>
 {
-    public readonly IntPtr tv_sec;       /* seconds */
+    public readonly nint tv_sec;       /* seconds */
     public readonly long tv_nsec;        /* and nanoseconds */
 
     public bool IsOmit => tv_nsec == -2;
 
     public bool IsPseudoNow => tv_nsec == -1;
 
-    public long total_msec => tv_sec.ToInt64() * 1000 + tv_nsec / 1000000;
+    public long total_msec => (long)tv_sec * 1000 + tv_nsec / 1000000;
 
     public TimeSpec(DateTimeOffset dateTime)
         : this(dateTime.ToUnixTimeMilliseconds())
@@ -60,7 +169,7 @@ public readonly struct TimeSpec : IEquatable<TimeSpec>, IComparable<TimeSpec>
 
     public TimeSpec(long msec)
     {
-        tv_sec = new(msec / 1000);
+        tv_sec = (nint)(msec / 1000);
         tv_nsec = msec % 1000 * 1000000;
     }
 

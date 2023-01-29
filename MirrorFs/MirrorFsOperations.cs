@@ -43,7 +43,7 @@ internal class MirrorFsOperations : IFuseOperations
 
     public PosixResult FSyncDir(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
 
-    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat)
+    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
         var path = GetPath(fileNamePtr);
         if (File.Exists(path))
@@ -82,7 +82,7 @@ internal class MirrorFsOperations : IFuseOperations
 
     public void Init(ref FuseConnInfo fuse_conn_info) { }
     
-    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, IntPtr arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, IntPtr data) => PosixResult.ENOSYS;
+    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
     
     public PosixResult Link(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to) => PosixResult.ENOSYS;
 

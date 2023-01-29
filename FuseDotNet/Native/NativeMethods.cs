@@ -35,14 +35,14 @@ internal static class NativeMethods
     /// <returns><see cref="PosixResult"/></returns>
     [DllImport(LIB_FUSE, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     internal static extern PosixResult fuse_main_real(int argc,
-        [In, MarshalAs(UnmanagedType.LPArray)] IntPtr[] argv,
-        [In] FuseOperations? operations, IntPtr operationsSize, IntPtr userData);
+        [In, MarshalAs(UnmanagedType.LPArray)] nint[] argv,
+        [In] FuseOperations? operations, nint operationsSize, nint userData);
 
     [DllImport(LIB_C, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     internal static extern PosixResult unmount([In, MarshalAs(UnmanagedStringType)] string dir, int flags);
 
     [DllImport(LIB_C, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern IntPtr strlen(IntPtr ptr);
+    internal static extern nint strlen(nint ptr);
 
     [DllImport(LIB_C, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     internal static extern TimeSpec time(out TimeSpec timespec);

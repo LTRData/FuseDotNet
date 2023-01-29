@@ -167,24 +167,24 @@ public class FuseDiscUtils : IFuseOperations
     public PosixResult FSyncDir(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo)
         => Trace(nameof(FSyncDir), fileNamePtr, fileInfo, PosixResult.Success);
 
-    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat fileInfo)
+    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
         var path = Encoding.UTF8.GetString(fileNamePtr);
 
-        return GetAttr(path, out fileInfo);
+        return GetAttr(path, out stat);
     }
 
-    public PosixResult GetAttr(string path, out FuseFileStat fileInfo)
+    public PosixResult GetAttr(string path, out FuseFileStat stat)
     {
         var finfo = FileSystem.GetFileSystemInfo(path);
 
         if (!finfo.Exists)
         {
-            fileInfo = default;
+            stat = default;
             return Trace(nameof(GetAttr), path, PosixResult.ENOENT);
         }
 
-        fileInfo = new()
+        stat = new()
         {
             st_size = FileSystem.FileExists(path) ?
                 FileSystem.GetFileLength(path) : 0,
@@ -198,36 +198,36 @@ public class FuseDiscUtils : IFuseOperations
         if (FileSystem is IWindowsFileSystem wfs)
         {
             var fileNo = wfs.GetFileId(path);
-            fileInfo.st_ino = fileNo & 0xffffffffffff;  // Skip sequence part of mft number here
-            fileInfo.st_nlink = wfs.GetHardLinkCount(path);
-            fileInfo.st_gen = fileNo >> 48;
+            stat.st_ino = fileNo & 0xffffffffffff;  // Skip sequence part of mft number here
+            stat.st_nlink = wfs.GetHardLinkCount(path);
+            stat.st_gen = fileNo >> 48;
         }
 
         if (PosixFileSystem && FileSystem is IUnixFileSystem ufs)
         {
             var ufi = ufs.GetUnixFileInfo(path);
-            fileInfo.st_ino = ufi.Inode;
-            fileInfo.st_nlink = ufi.LinkCount;
-            fileInfo.st_rdev = ufi.DeviceId;
-            fileInfo.st_gid = (uint)ufi.GroupId;
-            fileInfo.st_uid = (uint)ufi.UserId;
-            fileInfo.st_mode = GetPosixFileMode(ufi.Permissions, ufi.FileType);
+            stat.st_ino = ufi.Inode;
+            stat.st_nlink = ufi.LinkCount;
+            stat.st_rdev = ufi.DeviceId;
+            stat.st_gid = (uint)ufi.GroupId;
+            stat.st_uid = (uint)ufi.UserId;
+            stat.st_mode = GetPosixFileMode(ufi.Permissions, ufi.FileType);
         }
 
         if (FileSystem is IClusterBasedFileSystem cfs)
         {
-            fileInfo.st_blksize = 512;
+            stat.st_blksize = 512;
 
-            if (fileInfo.st_size > 0)
+            if (stat.st_size > 0)
             {
-                fileInfo.st_blocks = cfs.GetAllocatedClustersCount(path)
+                stat.st_blocks = cfs.GetAllocatedClustersCount(path)
                     * (int)(cfs.ClusterSize / 512);
             }
         }
         else
         {
-            fileInfo.st_blksize = 512;
-            fileInfo.st_blocks = (fileInfo.st_size + 511) / 512;
+            stat.st_blksize = 512;
+            stat.st_blocks = (stat.st_size + 511) / 512;
         }
 
         return Trace(nameof(GetAttr), path, PosixResult.Success);
@@ -240,7 +240,7 @@ public class FuseDiscUtils : IFuseOperations
     {
     }
 
-    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, IntPtr arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, IntPtr data)
+    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data)
         => PosixResult.ENOSYS;
 
     public PosixResult Link(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to)

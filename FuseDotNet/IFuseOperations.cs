@@ -22,7 +22,7 @@ namespace FuseDotNet
     public interface IFuseOperations : IDisposable
     {
         PosixResult OpenDir(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo);
-        PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat);        
+        PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo);        
         PosixResult Read(ReadOnlySpan<byte> fileNamePtr, Span<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo);        
         PosixResult ReadDir(ReadOnlySpan<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags);
         PosixResult Open(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo);
@@ -45,7 +45,7 @@ namespace FuseDotNet
         PosixResult Truncate(ReadOnlySpan<byte> fileNamePtr, long size);
         PosixResult UTime(ReadOnlySpan<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo);
         PosixResult Create(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo);
-        PosixResult IoCtl(ReadOnlySpan<byte> fileNamePtr, int cmd, IntPtr arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, IntPtr data);
+        PosixResult IoCtl(ReadOnlySpan<byte> fileNamePtr, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data);
     }
 }
 

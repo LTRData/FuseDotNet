@@ -8,17 +8,17 @@ namespace TestFs;
 
 internal class TempFsOperations : IFuseOperations
 {
-    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat)
+    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
         var fileName = Encoding.UTF8.GetString(fileNamePtr);
 
-        stat = default;
-
         Console.WriteLine($"Getting attributes for file '{fileName}'");
+
+        stat = default;
 
         if (fileName == "/")
         {
-            stat.st_mode = _fileModeDirs;
+            stat.st_mode = fileModeDirs;
             stat.st_nlink = 2;
             stat.st_atim =
                 stat.st_mtim =
@@ -27,9 +27,9 @@ internal class TempFsOperations : IFuseOperations
         }
         else
         {
-            stat.st_mode = _fileModeReg;
+            stat.st_mode = fileModeReg;
             stat.st_nlink = 1;
-            stat.st_size = _fileContents.LongLength;
+            stat.st_size = FileContents.LongLength;
             stat.st_atim =
                 stat.st_mtim =
                 stat.st_ctim =
@@ -39,12 +39,12 @@ internal class TempFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
-    private readonly PosixFileMode _fileModeDirs = PosixFileMode.Directory
+    private readonly PosixFileMode fileModeDirs = PosixFileMode.Directory
         | PosixFileMode.OwnerAll
         | PosixFileMode.GroupReadExecute
         | PosixFileMode.OthersReadExecute;
     
-    private readonly PosixFileMode _fileModeReg = PosixFileMode.Regular
+    private readonly PosixFileMode fileModeReg = PosixFileMode.Regular
         | PosixFileMode.OwnerRead
         | PosixFileMode.OwnerWrite
         | PosixFileMode.GroupRead
@@ -59,7 +59,7 @@ internal class TempFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
-    private static readonly byte[] _fileContents = Encoding.UTF8.GetBytes("Hello world!\n");
+    private static readonly byte[] FileContents = Encoding.UTF8.GetBytes("Hello world!\n");
 
     public PosixResult Read(ReadOnlySpan<byte> fileNamePtr, Span<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
     {
@@ -67,9 +67,9 @@ internal class TempFsOperations : IFuseOperations
 
         Console.WriteLine($"Reading file '{fileName}', {buffer.Length} bytes from position {position}");
 
-        _fileContents.CopyTo(buffer);
+        FileContents.CopyTo(buffer);
         
-        readLength = _fileContents.Length;
+        readLength = FileContents.Length;
 
         return PosixResult.Success;
     }
@@ -149,5 +149,5 @@ internal class TempFsOperations : IFuseOperations
     
     public PosixResult Create(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, IntPtr arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, IntPtr data) => PosixResult.ENOSYS;
+    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
 }

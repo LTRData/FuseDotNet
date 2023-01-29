@@ -20,14 +20,14 @@ namespace FuseDotNet;
 public static class Fuse
 {
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
-    public static IntPtr StringToCoTaskMemUTF8(string? arg)
+    public static nint StringToCoTaskMemUTF8(string? arg)
         => Marshal.StringToCoTaskMemUTF8(arg);
 #else
-    public static IntPtr StringToCoTaskMemUTF8(string? arg)
+    public static nint StringToCoTaskMemUTF8(string? arg)
     {
         if (arg == null)
         {
-            return IntPtr.Zero;
+            return 0;
         }
 
         var array = Encoding.UTF8.GetBytes(arg);
@@ -49,7 +49,7 @@ public static class Fuse
     {
         var utf8args = args.Select(StringToCoTaskMemUTF8).ToArray();
 
-        var status = NativeMethods.fuse_main_real(utf8args.Length, utf8args, null, IntPtr.Zero, IntPtr.Zero);
+        var status = NativeMethods.fuse_main_real(utf8args.Length, utf8args, null, 0, 0);
 
         Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
 
@@ -118,7 +118,7 @@ public static class Fuse
 
         var utf8args = args.Select(StringToCoTaskMemUTF8).ToArray();
 
-        var status = NativeMethods.fuse_main_real(utf8args.Length, utf8args, fuseOperations, new IntPtr(Marshal.SizeOf(fuseOperations)), IntPtr.Zero);
+        var status = NativeMethods.fuse_main_real(utf8args.Length, utf8args, fuseOperations, Marshal.SizeOf(fuseOperations), 0);
 
         Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
 

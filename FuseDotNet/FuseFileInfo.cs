@@ -108,13 +108,13 @@ public struct FuseFileInfo
         {
             if (fh != 0)
             {
-                GCHandle.FromIntPtr(new(fh)).Free();
+                ((GCHandle)(nint)fh).Free();
                 fh = 0;
             }
 
             if (value != null)
             {
-                fh = ((IntPtr)GCHandle.Alloc(value)).ToInt64();
+                fh = (nint)GCHandle.Alloc(value);
             }
         }
     }

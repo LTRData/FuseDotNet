@@ -41,12 +41,9 @@ public class ConsoleLogger : ILogger
     /// <inheritdoc />
     public void Fatal(FormattableString message) => WriteMessage(ConsoleColor.Red, message);
 
-    private void WriteMessage(ConsoleColor newColor, FormattableString message)
-    {
-        WriteMessage(
+    private void WriteMessage(ConsoleColor newColor, FormattableString message) => WriteMessage(
             message.FormatMessageForLogging(addDateTime: true, threadId: Environment.CurrentManagedThreadId, loggerName: _loggerName),
             newColor);
-    }
 
     private static readonly object _lock = new();
 

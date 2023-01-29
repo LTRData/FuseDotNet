@@ -25,23 +25,23 @@ public static class FuseHelper
 
 #if NET6_0_OR_GREATER
 
-    public static unsafe ReadOnlySpan<byte> SpanFromIntPtr(IntPtr ptr)
-        => MemoryMarshal.CreateReadOnlySpanFromNullTerminated((byte*)ptr.ToPointer());
+    public static unsafe ReadOnlySpan<byte> SpanFromIntPtr(nint ptr)
+        => MemoryMarshal.CreateReadOnlySpanFromNullTerminated((byte*)ptr);
 
 #else
 
-    public static unsafe ReadOnlySpan<byte> SpanFromIntPtr(IntPtr ptr)
-        => ptr == IntPtr.Zero
+    public static unsafe ReadOnlySpan<byte> SpanFromIntPtr(nint ptr)
+        => ptr == 0
         ? default
         : SpanFromIntPtr(ptr, NativeMethods.strlen(ptr));
 
 #endif
 
-    public static unsafe Span<byte> SpanFromIntPtr(IntPtr ptr, IntPtr size)
-        => new(ptr.ToPointer(), size.ToInt32());
+    public static unsafe Span<byte> SpanFromIntPtr(nint ptr, nint size)
+        => new((void*)ptr, (int)size);
 
-    public static unsafe Span<byte> SpanFromIntPtr(IntPtr ptr, int size)
-        => new(ptr.ToPointer(), size);
+    public static unsafe Span<byte> SpanFromIntPtr(nint ptr, int size)
+        => new((void*)ptr, size);
 
     public static PosixFileMode ToPosixFileMode(this FileAttributes fileAttributes)
     {
@@ -80,6 +80,7 @@ public static class FuseHelper
     public static FileMode ToFileMode(this PosixOpenFlags flags)
     {
         FileMode mode;
+
         if (flags.HasFlag(PosixOpenFlags.CreateNew))
         {
             mode = FileMode.CreateNew;
@@ -100,18 +101,17 @@ public static class FuseHelper
         {
             mode = FileMode.Open;
         }
+
         return mode;
     }
 
     public static FileAccess ToFileAccess(this PosixOpenFlags flags)
-    {
-        return (flags & PosixOpenFlags.AccessModes) switch
+        => (flags & PosixOpenFlags.AccessModes) switch
         {
             PosixOpenFlags.Write => FileAccess.Write,
             PosixOpenFlags.ReadWrite => FileAccess.ReadWrite,
             _ => FileAccess.Read
         };
-    }
 
     public static FileShare ToFileShare(this PosixOpenFlags flags)
     {
