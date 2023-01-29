@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
+#pragma warning disable SYSLIB1054 // Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time
 
 /// <summary>
 /// Namespace for structures and classes related to native API.
@@ -23,7 +24,7 @@ internal static class NativeMethods
 
     private const string LIB_FUSE = "fuse3";
 
-    private const string LIB_C = "c";
+    private const string LIB_C = "libc";
 
     /// <summary>
     /// Mount a new Fuse Volume.

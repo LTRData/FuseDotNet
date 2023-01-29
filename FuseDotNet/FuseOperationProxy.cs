@@ -2,8 +2,10 @@ using FuseDotNet.Extensions;
 using FuseDotNet.Logging;
 using FuseDotNet.Native;
 using System;
+using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
+using static FuseDotNet.Native.FuseOperations;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable IDE0060 // Remove unused parameter
@@ -376,7 +378,7 @@ internal sealed class FuseOperationProxy
         }
     }
 
-    internal int readdir(nint path, nint buf, nint fuse_fill_dir_t, long offset, ref FuseFileInfo fileInfo, FuseReadDirFlags flags)
+    internal unsafe int readdir(nint path, nint buf, nint fuse_fill_dir_t, long offset, ref FuseFileInfo fileInfo, FuseReadDirFlags flags)
     {
         try
         {
@@ -389,7 +391,7 @@ internal sealed class FuseOperationProxy
                 return -(int)result;
             }
 
-            var fuse_fill_dir = Marshal.GetDelegateForFunctionPointer<FuseOperations.fuse_f_fill_dir>(fuse_fill_dir_t);
+            var fuse_fill_dir = (delegate* unmanaged[Cdecl]<nint, in byte, void*, long, FuseFillDirFlags, int>)fuse_fill_dir_t;
 
             if (logger.DebugEnabled)
             {
@@ -402,18 +404,47 @@ internal sealed class FuseOperationProxy
                 logger.Debug($"Filling files for directory '{pathstr}'");
             }
 
-            foreach (var file in entries)
+            var stat = stackalloc byte[FuseFileStat.NativeStructSize];
+
+            var name = ArrayPool<byte>.Shared.Rent(512);
+
+            try
             {
-                if (logger.DebugEnabled)
+                foreach (var file in entries)
                 {
-                    logger.Debug($"Directory entry: {file}");
+                    if (logger.DebugEnabled)
+                    {
+                        logger.Debug($"Directory entry: {file}");
+                    }
+
+                    file.Stat.MarshalToNative(stat);
+
+                    var length = Encoding.UTF8.GetByteCount(file.Name) + 1;  // Extra byte for null terminator
+
+                    if (name.Length < length)
+                    {
+                        ArrayPool<byte>.Shared.Return(name);
+                        name = null;
+                        name = ArrayPool<byte>.Shared.Rent(length);
+                    }
+
+                    length = Encoding.UTF8.GetBytes(file.Name, 0, file.Name.Length, name, 0);
+                    
+                    name[length] = 0; // Add null terminator
+
+                    var fill_result = fuse_fill_dir(buf, name[0], stat, file.Offset, file.Flags);
+
+                    if (fill_result != 0)
+                    {
+                        break;
+                    }
                 }
-
-                var fill_result = fuse_fill_dir(buf, file.Name, file.Stat, file.Offset, file.Flags);
-
-                if (fill_result != 0)
+            }
+            finally
+            {
+                if (name is not null)
                 {
-                    break;
+                    ArrayPool<byte>.Shared.Return(name);
                 }
             }
 

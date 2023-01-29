@@ -22,11 +22,11 @@ namespace FuseDotNet.Native;
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
 internal sealed class FuseOperations
 {
-	#region Delegates
+    #region Delegates
 
-	public delegate int fuse_f_fill_dir(nint buf, [MarshalAs(NativeMethods.UnmanagedStringType)]string name, in FuseFileStat stat, long off, FuseFillDirFlags flags);
+    public delegate int fuse_f_fill_dir(nint buf, [MarshalAs(NativeMethods.UnmanagedStringType)] string name, nint stat, long off, FuseFillDirFlags flags);
 
-	public delegate int fuse_f_getattr(nint path, nint stat, ref FuseFileInfo fileInfo);
+    public delegate int fuse_f_getattr(nint path, nint stat, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_readlink(nint path, nint target, nint size);
 	public delegate int fuse_f_mknod(nint path, PosixFileMode mode, int dev);
 	public delegate int fuse_f_mkdir(nint path, PosixFileMode mode);

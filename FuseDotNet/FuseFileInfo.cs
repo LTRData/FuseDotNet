@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
 #pragma warning disable 649,169
@@ -61,9 +62,13 @@ public struct FuseFileInfo
 {
     static unsafe FuseFileInfo()
     {
-        if (sizeof(FuseFileInfo) != 40)
+        if (IntPtr.Size == 8 && sizeof(FuseFileInfo) != 40)
         {
             throw new PlatformNotSupportedException($"Invalid packing of structure FuseFileInfo. Should be 40 bytes, is {sizeof(FuseFileInfo)} bytes");
+        }
+        else if (IntPtr.Size == 4 && sizeof(FuseFileInfo) != 32)
+        {
+            throw new PlatformNotSupportedException($"Invalid packing of structure FuseFileInfo. Should be 32 bytes, is {sizeof(FuseFileInfo)} bytes");
         }
     }
 
@@ -94,7 +99,7 @@ public struct FuseFileInfo
         {
             if (fh != 0)
             {
-                var gch = GCHandle.FromIntPtr(new(fh));
+                var gch = (GCHandle)(nint)fh;
                 if (gch.IsAllocated)
                 {
                     return gch.Target;
@@ -122,6 +127,6 @@ public struct FuseFileInfo
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString()
-        => FormatProviders.FuseFormat($"Context = {{{Context}, Options = {options}, Flags = {flags}, FileHandle = 0x{fh:X}}}");
+        => FormatProviders.FuseFormat($"{{Context = {Context}, Options = {options}, Flags = {flags}, FileHandle = 0x{fh:X}}}");
 }
 
