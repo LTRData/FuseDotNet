@@ -13,19 +13,25 @@
 	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Company>LTR Data</Company>
     <PackageOutputPath>$(LocalNuGetPath)</PackageOutputPath>
-    <Copyright>Copyright (C) 2022</Copyright>
+    <Copyright>Copyright (c) Olof Lagerkvist, LTR Data 2022 - 2023</Copyright>
     <Version>1.0.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
     <Company>LTR Data</Company>
     <Authors>Olof Lagerkvist</Authors>
     <PackageProjectUrl>https://github.com/LTRData/FuseDotNet</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageVersion>$(Version)</PackageVersion>
     <RepositoryUrl>https://github.com/LTRData/FuseDotNet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>dokan file files disk directory storage filesystem io filestore FAT NTFS FUSE</PackageTags>
     <SignAssembly>True</SignAssembly>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Link="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
 
