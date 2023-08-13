@@ -95,7 +95,7 @@ public struct FuseFileInfo
     /// </summary>
     public object? Context
     {
-        get
+        readonly get
         {
             if (fh != 0)
             {

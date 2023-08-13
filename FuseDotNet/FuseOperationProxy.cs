@@ -41,7 +41,7 @@ internal sealed class FuseOperationProxy
     {
         try
         {
-            var result = operations.ReadLink(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(target, size));
+            var result = operations.ReadLink(FuseHelper.SpanFromIntPtr(path), new(target, (int)size));
             return -(int)result;
         }
         catch (Exception ex)
@@ -97,7 +97,7 @@ internal sealed class FuseOperationProxy
     {
         try
         {
-            var result = operations.Write(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(buffer, size), position, out var writtenLength, ref fileInfo);
+            var result = operations.Write(FuseHelper.SpanFromIntPtr(path), new(buffer, (int)size), position, out var writtenLength, ref fileInfo);
             if (result == PosixResult.Success)
             {
                 return writtenLength;
@@ -396,9 +396,9 @@ internal sealed class FuseOperationProxy
             if (logger.DebugEnabled)
             {
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
-                var pathstr = Encoding.UTF8.GetString(pathPtr);
+                var pathstr = Encoding.UTF8.GetString(pathPtr.Span);
 #else
-                var pathstr = Encoding.UTF8.GetString(pathPtr.ToArray());
+                var pathstr = Encoding.UTF8.GetString(pathPtr.Span.ToArray());
 #endif
 
                 logger.Debug($"Filling files for directory '{pathstr}'");
@@ -466,7 +466,7 @@ internal sealed class FuseOperationProxy
     {
         try
         {
-            var result = operations.Read(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(buffer, size), position, out var readLength, ref fileInfo);
+            var result = operations.Read(FuseHelper.SpanFromIntPtr(path), new(buffer, (int)size), position, out var readLength, ref fileInfo);
             if (result == PosixResult.Success)
             {
                 return readLength;

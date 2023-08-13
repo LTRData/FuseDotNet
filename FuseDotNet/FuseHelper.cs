@@ -25,23 +25,17 @@ public static class FuseHelper
 
 #if NET6_0_OR_GREATER
 
-    public static unsafe ReadOnlySpan<byte> SpanFromIntPtr(nint ptr)
-        => MemoryMarshal.CreateReadOnlySpanFromNullTerminated((byte*)ptr);
+    public static unsafe FuseMemory<byte> SpanFromIntPtr(nint ptr)
+        => new(ptr, MemoryMarshal.CreateReadOnlySpanFromNullTerminated((byte*)ptr).Length);
 
 #else
 
-    public static unsafe ReadOnlySpan<byte> SpanFromIntPtr(nint ptr)
+    public static unsafe FuseMemory<byte> SpanFromIntPtr(nint ptr)
         => ptr == 0
         ? default
-        : SpanFromIntPtr(ptr, NativeMethods.strlen(ptr));
+        : new(ptr, (int)NativeMethods.strlen(ptr));
 
 #endif
-
-    public static unsafe Span<byte> SpanFromIntPtr(nint ptr, nint size)
-        => new((void*)ptr, (int)size);
-
-    public static unsafe Span<byte> SpanFromIntPtr(nint ptr, int size)
-        => new((void*)ptr, size);
 
     public static PosixFileMode ToPosixFileMode(this FileAttributes fileAttributes)
     {

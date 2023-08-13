@@ -42,9 +42,9 @@ public struct FuseFileStat
 
     public static int NativeStructSize { get; }
 
-    public unsafe void MarshalToNative(void* pNative) => pMarshalToNative(pNative, this);
+    public readonly unsafe void MarshalToNative(void* pNative) => pMarshalToNative(pNative, this);
 
-    public unsafe void MarshalToNative(nint pNative) => pMarshalToNative((void*)pNative, this);
+    public readonly unsafe void MarshalToNative(nint pNative) => pMarshalToNative((void*)pNative, this);
 
     public long st_size { get; set; }
     public long st_nlink { get; set; }
@@ -62,7 +62,7 @@ public struct FuseFileStat
     public int st_blksize { get; set; }
     public long st_blocks { get; set; }
 
-    public override string ToString() => $"{{ Size = {st_size}, Mode = {st_mode}, Inode = {st_ino}, Uid = {st_uid}, Gid = {st_gid} }}";
+    public override readonly string ToString() => $"{{ Size = {st_size}, Mode = {st_mode}, Inode = {st_ino}, Uid = {st_uid}, Gid = {st_gid} }}";
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -87,7 +87,7 @@ public struct FreeBSDX64FileStat
         st_gen = stat.st_gen;
     }
 
-    public override string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
+    public override readonly string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
 
     unsafe static FreeBSDX64FileStat()
     {
@@ -138,7 +138,7 @@ public struct LinuxX64FileStat
         st_blksize = stat.st_blksize;
     }
 
-    public override string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
+    public override readonly string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
 
     unsafe static LinuxX64FileStat()
     {
@@ -186,7 +186,7 @@ public struct LinuxX86FileStat
         st_blksize = stat.st_blksize;
     }
 
-    public override string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
+    public override readonly string ToString() => $"{{ st_ino = {st_ino}, st_mode = [{st_mode}], st_size = {st_size} }}";
 
     unsafe static LinuxX86FileStat()
     {

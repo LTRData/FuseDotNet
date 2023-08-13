@@ -23,7 +23,7 @@ public static class Fuse
     public static nint StringToCoTaskMemUTF8(string? arg)
         => Marshal.StringToCoTaskMemUTF8(arg);
 #else
-    public static nint StringToCoTaskMemUTF8(string? arg)
+    public static unsafe nint StringToCoTaskMemUTF8(string? arg)
     {
         if (arg == null)
         {
@@ -32,7 +32,7 @@ public static class Fuse
 
         var array = Encoding.UTF8.GetBytes(arg);
         var ptr = Marshal.AllocCoTaskMem(array.Length + 1);
-        var bytes = FuseHelper.SpanFromIntPtr(ptr, array.Length + 1);
+        var bytes = new Span<byte>((byte*)ptr, array.Length + 1);
         array.CopyTo(bytes);
         bytes[array.Length] = 0;
         return ptr;

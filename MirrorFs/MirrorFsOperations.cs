@@ -14,10 +14,10 @@ internal class MirrorFsOperations : IFuseOperations
         BasePath = basePath;
     }
 
-    public string GetPath(ReadOnlySpan<byte> fileNamePtr)
-        => Path.Join(BasePath, Encoding.UTF8.GetString(fileNamePtr));
+    public string GetPath(ReadOnlyFuseMemory<byte> fileNamePtr)
+        => Path.Join(BasePath, Encoding.UTF8.GetString(fileNamePtr.Span));
 
-    public PosixResult Access(ReadOnlySpan<byte> fileNamePtr, PosixAccessMode mask)
+    public PosixResult Access(ReadOnlyFuseMemory<byte> fileNamePtr, PosixAccessMode mask)
     {
         var path = GetPath(fileNamePtr);
 
@@ -33,17 +33,17 @@ internal class MirrorFsOperations : IFuseOperations
         }
     }
 
-    public PosixResult Create(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
+    public PosixResult Create(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
 
     public void Dispose() { }
 
-    public PosixResult Flush(ReadOnlySpan<byte> readOnlySpan, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
+    public PosixResult Flush(ReadOnlyFuseMemory<byte> readOnlySpan, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
 
-    public PosixResult FSync(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
+    public PosixResult FSync(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
 
-    public PosixResult FSyncDir(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
+    public PosixResult FSyncDir(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
 
-    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
+    public PosixResult GetAttr(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
         var path = GetPath(fileNamePtr);
         if (File.Exists(path))
@@ -82,13 +82,13 @@ internal class MirrorFsOperations : IFuseOperations
 
     public void Init(ref FuseConnInfo fuse_conn_info) { }
     
-    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
+    public PosixResult IoCtl(ReadOnlyFuseMemory<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
     
-    public PosixResult Link(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to) => PosixResult.ENOSYS;
+    public PosixResult Link(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to) => PosixResult.ENOSYS;
 
-    public PosixResult MkDir(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode) => PosixResult.ENOSYS;
+    public PosixResult MkDir(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode) => PosixResult.ENOSYS;
 
-    public PosixResult Open(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult Open(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         fileInfo.Context = File.Open(GetPath(fileNamePtr),
                                            fileInfo.flags.ToFileMode(),
@@ -98,7 +98,7 @@ internal class MirrorFsOperations : IFuseOperations
         return PosixResult.Success;
     }
     
-    public PosixResult OpenDir(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult OpenDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         if (Directory.Exists(GetPath(fileNamePtr)))
         {
@@ -110,7 +110,7 @@ internal class MirrorFsOperations : IFuseOperations
         }
     }
 
-    public PosixResult Read(ReadOnlySpan<byte> fileNamePtr, Span<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
+    public PosixResult Read(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is not Stream stream)
         {
@@ -119,12 +119,12 @@ internal class MirrorFsOperations : IFuseOperations
         }
 
         stream.Position = position;
-        readLength = stream.Read(buffer);
+        readLength = stream.Read(buffer.Span);
 
         return PosixResult.Success;
     }
 
-    public PosixResult ReadDir(ReadOnlySpan<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
+    public PosixResult ReadDir(ReadOnlyFuseMemory<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
     {
         var path = GetPath(fileNamePtr);
 
@@ -139,9 +139,9 @@ internal class MirrorFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
-    public PosixResult ReadLink(ReadOnlySpan<byte> fileNamePtr, Span<byte> target) => PosixResult.ENOSYS;
+    public PosixResult ReadLink(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> target) => PosixResult.ENOSYS;
 
-    public PosixResult Release(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult Release(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is not Stream stream)
         {
@@ -153,29 +153,29 @@ internal class MirrorFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
-    public PosixResult ReleaseDir(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult ReleaseDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
 
-    public PosixResult Rename(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to)
+    public PosixResult Rename(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to)
     {
         File.Move(GetPath(from), GetPath(to));
         return PosixResult.Success;
     }
 
-    public PosixResult RmDir(ReadOnlySpan<byte> fileNamePtr)
+    public PosixResult RmDir(ReadOnlyFuseMemory<byte> fileNamePtr)
     {
         Directory.Delete(GetPath(fileNamePtr));
         return PosixResult.Success;
     }
 
-    public PosixResult StatFs(ReadOnlySpan<byte> fileNamePtr, out FuseVfsStat statvfs)
+    public PosixResult StatFs(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseVfsStat statvfs)
     {
         statvfs = default;
         return PosixResult.Success;
     }
 
-    public PosixResult SymLink(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to) => PosixResult.ENOSYS;
+    public PosixResult SymLink(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to) => PosixResult.ENOSYS;
 
-    public PosixResult Truncate(ReadOnlySpan<byte> fileNamePtr, long size)
+    public PosixResult Truncate(ReadOnlyFuseMemory<byte> fileNamePtr, long size)
     {
         using var file = File.Open(GetPath(fileNamePtr),
                                    FileMode.Open,
@@ -187,13 +187,13 @@ internal class MirrorFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
-    public PosixResult Unlink(ReadOnlySpan<byte> fileNamePtr)
+    public PosixResult Unlink(ReadOnlyFuseMemory<byte> fileNamePtr)
     {
         File.Delete(GetPath(fileNamePtr));
         return PosixResult.Success;
     }
 
-    public PosixResult UTime(ReadOnlySpan<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo)
+    public PosixResult UTime(ReadOnlyFuseMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo)
     {
         var path = GetPath(fileNamePtr);
         File.SetLastAccessTimeUtc(path, atime.ToDateTime().UtcDateTime);
@@ -201,7 +201,7 @@ internal class MirrorFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
-    public PosixResult Write(ReadOnlySpan<byte> fileNamePtr, ReadOnlySpan<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
+    public PosixResult Write(ReadOnlyFuseMemory<byte> fileNamePtr, ReadOnlyFuseMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is not Stream stream)
         {
@@ -210,7 +210,7 @@ internal class MirrorFsOperations : IFuseOperations
         }
 
         stream.Position = position;
-        stream.Write(buffer);
+        stream.Write(buffer.Span);
         writtenLength = buffer.Length;
 
         return PosixResult.Success;

@@ -17,22 +17,35 @@ anyway.
 
 ## Licensing
 FuseDotNet is distributed under a version of the "MIT License",
-which is a BSD-like license. See the 'license.mit.txt' file for details.
+which is a BSD-like license. See the 'LICENSE.txt' file for details.
 
 ## Environment
-64 bit Linux or FreeBSD.
+* Linux: x86 or x64
+* FreeBSD: x64
+* Fuse: Fuse3
 
-Targets .NET Framework 4.6 and 4.8 and .NET Standard 2.0 can be used with Mono
-and targets .NET Standard 2.1 and .NET 6.0 can be used with .NET Core and .NET
-6.0 applications and libraries.
+Targets .NET Framework 4.8 and .NET Standard 2.0 can be used with Mono and targets
+.NET Standard 2.1 can be used with .NET Core 3.1 - .NET 5.0 applications and
+libraries. There are also .NET 6.0 and .NET 7.0 builds with certain optimizations
+available in those versions.
 
 ## How to write a file system
 To make a file system, an application needs to implement IFuseOperations
-interface. Once implemented, you can invoke Mount function on your driver
-instance to mount a drive. The function blocks until the file system is
-unmounted. Semantics and parameters are just like Fuse library. See sample
+interface. Once implemented, you can invoke `Mount` method on your driver
+instance to mount a drive. By default, the Fuse native library forks the process
+and continues work in a child process. The parent process returns. This can be an
+issue when for example debugging, in which case "-f" or "-d" options can be passed
+to Fuse to instead do work in current process and block until file system is
+dismounted. Parameters to `Mount` method are just like Fuse library. See sample
 codes under 'sample' directory. Administrator privileges are required to run
 file system applications.
+
+#### Sample code
+
+There are sample implementations, "mirror" and "tempfs", that show basic
+implementation of the library. There is also a "DiscUtils.Fuse" package that
+implements a FuseDotNet file system using `IFileSystem` implementations in DiscUtils
+library.
 
 ## Unmounting
 Just run the below command to unmount a file system.

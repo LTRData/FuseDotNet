@@ -21,31 +21,31 @@ namespace FuseDotNet
     /// <remarks>This is the same struct as <c>FUSE_OPERATIONS</c> (fuse.h) in the C version of Fuse.</remarks>
     public interface IFuseOperations : IDisposable
     {
-        PosixResult OpenDir(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo);
-        PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo);        
-        PosixResult Read(ReadOnlySpan<byte> fileNamePtr, Span<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo);        
-        PosixResult ReadDir(ReadOnlySpan<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags);
-        PosixResult Open(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo);
+        PosixResult OpenDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo);
+        PosixResult GetAttr(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo);        
+        PosixResult Read(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo);        
+        PosixResult ReadDir(ReadOnlyFuseMemory<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags);
+        PosixResult Open(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo);
         void Init(ref FuseConnInfo fuse_conn_info);
-        PosixResult Access(ReadOnlySpan<byte> fileNamePtr, PosixAccessMode mask);
-        PosixResult StatFs(ReadOnlySpan<byte> fileNamePtr, out FuseVfsStat statvfs);
-        PosixResult FSyncDir(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo);
-        PosixResult ReadLink(ReadOnlySpan<byte> fileNamePtr, Span<byte> target);
-        PosixResult ReleaseDir(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo);
-        PosixResult Link(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to);
-        PosixResult MkDir(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode);
-        PosixResult Release(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo);
-        PosixResult RmDir(ReadOnlySpan<byte> fileNamePtr);
-        PosixResult FSync(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo);
-        PosixResult Unlink(ReadOnlySpan<byte> fileNamePtr);
-        PosixResult Write(ReadOnlySpan<byte> fileNamePtr, ReadOnlySpan<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo);
-        PosixResult SymLink(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to);
-        PosixResult Flush(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo);
-        PosixResult Rename(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to);
-        PosixResult Truncate(ReadOnlySpan<byte> fileNamePtr, long size);
-        PosixResult UTime(ReadOnlySpan<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo);
-        PosixResult Create(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo);
-        PosixResult IoCtl(ReadOnlySpan<byte> fileNamePtr, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data);
+        PosixResult Access(ReadOnlyFuseMemory<byte> fileNamePtr, PosixAccessMode mask);
+        PosixResult StatFs(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseVfsStat statvfs);
+        PosixResult FSyncDir(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo);
+        PosixResult ReadLink(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> target);
+        PosixResult ReleaseDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo);
+        PosixResult Link(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to);
+        PosixResult MkDir(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode);
+        PosixResult Release(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo);
+        PosixResult RmDir(ReadOnlyFuseMemory<byte> fileNamePtr);
+        PosixResult FSync(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo);
+        PosixResult Unlink(ReadOnlyFuseMemory<byte> fileNamePtr);
+        PosixResult Write(ReadOnlyFuseMemory<byte> fileNamePtr, ReadOnlyFuseMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo);
+        PosixResult SymLink(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to);
+        PosixResult Flush(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo);
+        PosixResult Rename(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to);
+        PosixResult Truncate(ReadOnlyFuseMemory<byte> fileNamePtr, long size);
+        PosixResult UTime(ReadOnlyFuseMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo);
+        PosixResult Create(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo);
+        PosixResult IoCtl(ReadOnlyFuseMemory<byte> fileNamePtr, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data);
     }
 }
 

@@ -8,9 +8,9 @@ namespace TestFs;
 
 internal class TempFsOperations : IFuseOperations
 {
-    public PosixResult GetAttr(ReadOnlySpan<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
+    public PosixResult GetAttr(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
-        var fileName = Encoding.UTF8.GetString(fileNamePtr);
+        var fileName = Encoding.UTF8.GetString(fileNamePtr.Span);
 
         Console.WriteLine($"Getting attributes for file '{fileName}'");
 
@@ -50,9 +50,9 @@ internal class TempFsOperations : IFuseOperations
         | PosixFileMode.GroupRead
         | PosixFileMode.OthersRead;
 
-    public PosixResult OpenDir(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult OpenDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
-        var fileName = Encoding.UTF8.GetString(fileNamePtr);
+        var fileName = Encoding.UTF8.GetString(fileNamePtr.Span);
 
         Console.WriteLine($"Opening directory '{fileName}'");
 
@@ -61,22 +61,22 @@ internal class TempFsOperations : IFuseOperations
 
     private static readonly byte[] FileContents = Encoding.UTF8.GetBytes("Hello world!\n");
 
-    public PosixResult Read(ReadOnlySpan<byte> fileNamePtr, Span<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
+    public PosixResult Read(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
     {
-        var fileName = Encoding.UTF8.GetString(fileNamePtr);
+        var fileName = Encoding.UTF8.GetString(fileNamePtr.Span);
 
         Console.WriteLine($"Reading file '{fileName}', {buffer.Length} bytes from position {position}");
 
-        FileContents.CopyTo(buffer);
+        FileContents.CopyTo(buffer.Span);
         
         readLength = FileContents.Length;
 
         return PosixResult.Success;
     }
 
-    public PosixResult ReadDir(ReadOnlySpan<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
+    public PosixResult ReadDir(ReadOnlyFuseMemory<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
     {
-        var fileName = Encoding.UTF8.GetString(fileNamePtr);
+        var fileName = Encoding.UTF8.GetString(fileNamePtr.Span);
 
         entries = EnumerateEntries(fileName);
 
@@ -94,46 +94,46 @@ internal class TempFsOperations : IFuseOperations
         yield return new("test.txt", 0, 0, new() { st_mode = PosixFileMode.Regular });
     }
 
-    public PosixResult Open(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult Open(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
 
     public void Init(ref FuseConnInfo fuse_conn_info)
         => Console.WriteLine($"Initializing file system, driver capabilities: {fuse_conn_info.capable}, requested: {fuse_conn_info.want}");
 
-    public PosixResult Access(ReadOnlySpan<byte> fileNamePtr, PosixAccessMode mask) => PosixResult.Success;
+    public PosixResult Access(ReadOnlyFuseMemory<byte> fileNamePtr, PosixAccessMode mask) => PosixResult.Success;
 
-    public PosixResult StatFs(ReadOnlySpan<byte> fileNamePtr, out FuseVfsStat statvfs)
+    public PosixResult StatFs(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseVfsStat statvfs)
     {
         statvfs = default;
         return PosixResult.Success;
     }
 
-    public PosixResult FSyncDir(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult FSyncDir(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.Success;
 
-    public PosixResult ReadLink(ReadOnlySpan<byte> fileNamePtr, Span<byte> target) => PosixResult.ENOSYS;
+    public PosixResult ReadLink(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> target) => PosixResult.ENOSYS;
 
-    public PosixResult ReleaseDir(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult ReleaseDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult MkDir(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode) => PosixResult.Success;
+    public PosixResult MkDir(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode) => PosixResult.Success;
     
-    public PosixResult Release(ReadOnlySpan<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult Release(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult RmDir(ReadOnlySpan<byte> fileNamePtr) => PosixResult.Success;
+    public PosixResult RmDir(ReadOnlyFuseMemory<byte> fileNamePtr) => PosixResult.Success;
     
-    public PosixResult FSync(ReadOnlySpan<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult FSync(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult Unlink(ReadOnlySpan<byte> fileNamePtr) => PosixResult.Success;
+    public PosixResult Unlink(ReadOnlyFuseMemory<byte> fileNamePtr) => PosixResult.Success;
     
-    public PosixResult SymLink(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to) => PosixResult.Success;
+    public PosixResult SymLink(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to) => PosixResult.Success;
     
-    public PosixResult Rename(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to) => PosixResult.Success;
+    public PosixResult Rename(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to) => PosixResult.Success;
     
-    public PosixResult Truncate(ReadOnlySpan<byte> fileNamePtr, long size) => PosixResult.Success;
+    public PosixResult Truncate(ReadOnlyFuseMemory<byte> fileNamePtr, long size) => PosixResult.Success;
     
     public void Dispose() => Console.WriteLine("Disposing file system");
     
-    public PosixResult Write(ReadOnlySpan<byte> fileNamePtr, ReadOnlySpan<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
+    public PosixResult Write(ReadOnlyFuseMemory<byte> fileNamePtr, ReadOnlyFuseMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
     {
-        var fileName = Encoding.UTF8.GetString(fileNamePtr);
+        var fileName = Encoding.UTF8.GetString(fileNamePtr.Span);
 
         Console.WriteLine($"Writing file '{fileName}', {buffer.Length} bytes at position {position}");
 
@@ -141,13 +141,13 @@ internal class TempFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
-    public PosixResult Link(ReadOnlySpan<byte> from, ReadOnlySpan<byte> to) => PosixResult.Success;
+    public PosixResult Link(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to) => PosixResult.Success;
     
-    public PosixResult Flush(ReadOnlySpan<byte> readOnlySpan, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult Flush(ReadOnlyFuseMemory<byte> readOnlySpan, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult UTime(ReadOnlySpan<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult UTime(ReadOnlyFuseMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult Create(ReadOnlySpan<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult Create(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult IoCtl(ReadOnlySpan<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
+    public PosixResult IoCtl(ReadOnlyFuseMemory<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
 }

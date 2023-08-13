@@ -24,7 +24,7 @@
     <PackageVersion>$(Version)</PackageVersion>
     <RepositoryUrl>https://github.com/LTRData/FuseDotNet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>dokan file files disk directory storage filesystem io filestore FAT NTFS FUSE</PackageTags>
+    <PackageTags>file files disk directory storage filesystem io filestore FAT NTFS FUSE</PackageTags>
     <SignAssembly>True</SignAssembly>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
