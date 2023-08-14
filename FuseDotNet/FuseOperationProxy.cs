@@ -1,11 +1,8 @@
 using FuseDotNet.Extensions;
 using FuseDotNet.Logging;
-using FuseDotNet.Native;
 using System;
 using System.Buffers;
-using System.Runtime.InteropServices;
 using System.Text;
-using static FuseDotNet.Native.FuseOperations;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable IDE0060 // Remove unused parameter
@@ -395,11 +392,7 @@ internal sealed class FuseOperationProxy
 
             if (logger.DebugEnabled)
             {
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
-                var pathstr = Encoding.UTF8.GetString(pathPtr.Span);
-#else
-                var pathstr = Encoding.UTF8.GetString(pathPtr.Span.ToArray());
-#endif
+                var pathstr = FuseHelper.GetStringFromSpan(pathPtr.Span);
 
                 logger.Debug($"Filling files for directory '{pathstr}'");
             }

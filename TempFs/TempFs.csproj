@@ -10,9 +10,5 @@
   <ItemGroup>
     <ProjectReference Include="..\FuseDotNet\FuseDotNet.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="LTRData.DiscUtils.Core" Version="*" />
-  </ItemGroup>
   
 </Project>

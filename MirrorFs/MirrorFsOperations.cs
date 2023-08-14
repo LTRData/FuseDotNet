@@ -1,7 +1,5 @@
 ﻿using FuseDotNet;
 using FuseDotNet.Extensions;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace MirrorFs;
 
@@ -15,7 +13,7 @@ internal class MirrorFsOperations : IFuseOperations
     }
 
     public string GetPath(ReadOnlyFuseMemory<byte> fileNamePtr)
-        => Path.Join(BasePath, Encoding.UTF8.GetString(fileNamePtr.Span));
+        => Path.Join(BasePath, FuseHelper.GetStringFromSpan(fileNamePtr.Span));
 
     public PosixResult Access(ReadOnlyFuseMemory<byte> fileNamePtr, PosixAccessMode mask)
     {

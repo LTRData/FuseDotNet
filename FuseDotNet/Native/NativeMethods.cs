@@ -1,6 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
+﻿using System.Runtime.InteropServices;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments

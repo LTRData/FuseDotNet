@@ -1,8 +1,5 @@
 ﻿using FuseDotNet.Native;
 using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 #pragma warning disable IDE1006 // Naming Styles

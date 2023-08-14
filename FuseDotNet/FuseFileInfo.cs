@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 
 #pragma warning disable 649,169

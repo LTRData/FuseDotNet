@@ -2,11 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using FuseDotNet.Extensions;
 using FuseDotNet.Logging;
 using FuseDotNet.Native;
 

@@ -1,12 +1,12 @@
 ﻿using FuseDotNet.Native;
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
@@ -145,5 +145,50 @@ public static class FuseHelper
             ArgumentNullException or NullReferenceException => PosixResult.EINVAL,
             _ => PosixResult.EIO
         };
+    }
+
+    public static string GetStringFromSpan(ReadOnlySpan<byte> span)
+    {
+        if (span.IsEmpty)
+        {
+            return "";
+        }
+        else if (span.SequenceEqual("/"u8))
+        {
+            return "/";
+        }
+        else if (span.SequenceEqual(@"\"u8))
+        {
+            return @"\";
+        }
+        else if (span.SequenceEqual("*"u8))
+        {
+            return "*";
+        }
+        else if (span.SequenceEqual("*.*"u8))
+        {
+            return "*.*";
+        }
+        else if (span.SequenceEqual("?"u8))
+        {
+            return "?";
+        }
+        else
+        {
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
+            return Encoding.UTF8.GetString(span);
+#else
+            var buffer = ArrayPool<byte>.Shared.Rent(span.Length);
+            try
+            {
+                span.CopyTo(buffer);
+                return Encoding.UTF8.GetString(buffer, 0, span.Length);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+#endif
+        }
     }
 }
