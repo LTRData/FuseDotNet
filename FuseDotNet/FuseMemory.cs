@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.IO;
 
 namespace FuseDotNet;
 
@@ -9,7 +10,7 @@ namespace FuseDotNet;
 /// <typeparam name="T">Type of elements in the memory</typeparam>
 public readonly struct FuseMemory<T> where T : unmanaged
 {
-    internal FuseMemory(nint pointer, int length)
+    public FuseMemory(nint pointer, int length)
     {
         Address = pointer;
         Length = length;
@@ -51,6 +52,15 @@ public readonly struct FuseMemory<T> where T : unmanaged
     public MemoryManager<T> GetMemoryManager()
         => new UnmanagedMemoryManager<T>(Address, Length);
 
+    /// <summary>
+    /// Gets a disposable <see cref="UnmanagedMemoryStream"/> for this memory block.
+    /// Remember though, that the memory is invalid after return to Dokan API
+    /// so make sure that no asynchronous operations use the memory after returning from
+    /// implementation methods.
+    /// </summary>
+    public unsafe UnmanagedMemoryStream GetStream()
+        => new((byte*)Address, Length * sizeof(T));
+
     public override string ToString()
     {
         if (Address == 0)
@@ -81,7 +91,7 @@ public readonly struct ReadOnlyFuseMemory<T> where T : unmanaged
     public static implicit operator ReadOnlyFuseMemory<T>(FuseMemory<T> origin)
         => new(origin.Address, origin.Length);
 
-    internal ReadOnlyFuseMemory(nint pointer, int length)
+    public ReadOnlyFuseMemory(nint pointer, int length)
     {
         Address = pointer;
         Length = length;
@@ -122,6 +132,15 @@ public readonly struct ReadOnlyFuseMemory<T> where T : unmanaged
     /// </summary>
     public MemoryManager<T> GetMemoryManager()
         => new UnmanagedMemoryManager<T>(Address, Length);
+
+    /// <summary>
+    /// Gets a disposable <see cref="UnmanagedMemoryStream"/> for this memory block.
+    /// Remember though, that the memory is invalid after return to Dokan API
+    /// so make sure that no asynchronous operations use the memory after returning from
+    /// implementation methods.
+    /// </summary>
+    public unsafe UnmanagedMemoryStream GetStream()
+        => new((byte*)Address, Length * sizeof(T), Length * sizeof(T), FileAccess.Read);
 
     public override string ToString()
     {
