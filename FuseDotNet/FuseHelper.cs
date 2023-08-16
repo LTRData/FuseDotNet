@@ -125,7 +125,7 @@ public static class FuseHelper
 
     public static PosixResult ToPosixResult(this Exception? ex)
     {
-        if (ex is TargetInvocationException or AggregateException)
+        while (ex is TargetInvocationException or AggregateException)
         {
             ex = ex.InnerException;
         }
