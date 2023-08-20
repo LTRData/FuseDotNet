@@ -563,6 +563,8 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Write), fileNamePtr, fileInfo, PosixResult.EBADF);
     }
 
+    public bool IsDisposed => disposedValue;
+
     protected virtual void Dispose(bool disposing)
     {
         if (!disposedValue)
