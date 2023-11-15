@@ -10,18 +10,13 @@ namespace FuseDotNet.Logging;
 /// To see the output in visual studio 
 /// Project + %Properties, Debug tab, check "Enable unmanaged code debugging".
 /// </remarks> 
-public class DebugViewLogger : ILogger
+/// <remarks>
+/// Initializes a new instance of the <see cref="DebugViewLogger"/> class.
+/// </remarks>
+/// <param name="loggerName">Optional name to be added to each log line.</param>
+public class DebugViewLogger(string loggerName = "") : ILogger
 {
-    private readonly string _loggerName;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DebugViewLogger"/> class.
-    /// </summary>
-    /// <param name="loggerName">Optional name to be added to each log line.</param>
-    public DebugViewLogger(string loggerName = "")
-    {
-        _loggerName = loggerName;
-    }
+    private readonly string _loggerName = loggerName;
 
     /// <inheritdoc />
     public bool DebugEnabled => true;

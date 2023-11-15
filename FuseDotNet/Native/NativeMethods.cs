@@ -4,9 +4,6 @@
 #pragma warning disable CA2101 // Specify marshaling for P/Invoke string arguments
 #pragma warning disable SYSLIB1054 // Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time
 
-/// <summary>
-/// Namespace for structures and classes related to native API.
-/// </summary>
 namespace FuseDotNet.Native;
 
 /// <summary>
@@ -29,8 +26,11 @@ internal static class NativeMethods
     /// This function block until the device is unmounted.
     /// If the mount fails, it will directly return an error.
     /// </summary>
+    /// <param name="argc"></param>
     /// <param name="argv">Array of pointers to UTF8 encoded arguments that describe the mount.</param>
     /// <param name="operations">Instance of <see cref="FuseOperations"/> that will be called for each request made by the kernel.</param>
+    /// <param name="operationsSize"></param>
+    /// <param name="userData"></param>
     /// <returns><see cref="PosixResult"/></returns>
     [DllImport(LIB_FUSE, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     internal static extern PosixResult fuse_main_real(int argc,

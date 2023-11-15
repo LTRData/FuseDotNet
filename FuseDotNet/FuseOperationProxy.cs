@@ -13,26 +13,20 @@ namespace FuseDotNet;
 /// <summary>
 /// The fuse operation proxy.
 /// </summary>
-internal sealed class FuseOperationProxy
+/// <remarks>
+/// Initializes a new instance of the <see cref="FuseOperationProxy"/> class.
+/// </remarks>
+/// <param name="operations">
+/// A <see cref="IFuseOperations"/> that contains the custom implementation of the driver.
+/// </param>
+/// <param name="logger">
+/// A <see cref="ILogger"/> that handle all logging.
+/// </param>
+internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger logger)
 {
-    private readonly IFuseOperations operations;
+    private readonly IFuseOperations operations = operations;
 
-    private readonly ILogger logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FuseOperationProxy"/> class.
-    /// </summary>
-    /// <param name="operations">
-    /// A <see cref="IFuseOperations"/> that contains the custom implementation of the driver.
-    /// </param>
-    /// <param name="logger">
-    /// A <see cref="ILogger"/> that handle all logging.
-    /// </param>
-    public FuseOperationProxy(IFuseOperations operations, ILogger logger)
-    {
-        this.operations = operations;
-        this.logger = logger;
-    }
+    private readonly ILogger logger = logger;
 
     internal int readlink(nint path, nint target, nint size)
     {

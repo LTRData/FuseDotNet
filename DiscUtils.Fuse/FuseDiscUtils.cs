@@ -15,8 +15,6 @@ public class FuseDiscUtils : IFuseOperations
 
     private readonly ILogger logger;
 
-    private bool disposedValue;
-
     public bool CaseSensitive { get; }
 
     public bool PosixFileSystem { get; }
@@ -563,11 +561,11 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Write), fileNamePtr, fileInfo, PosixResult.EBADF);
     }
 
-    public bool IsDisposed => disposedValue;
+    public bool IsDisposed { get; private set; }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposedValue)
+        if (!IsDisposed)
         {
             if (disposing)
             {
@@ -587,7 +585,7 @@ public class FuseDiscUtils : IFuseOperations
 
             // TODO: set large fields to null
 
-            disposedValue = true;
+            IsDisposed = true;
         }
     }
 

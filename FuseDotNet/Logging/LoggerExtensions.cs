@@ -26,6 +26,7 @@ public static class LoggerExtensions
     /// </summary>
     /// <param name="message">Message to format.</param>
     /// <param name="addDateTime">If date and time shout be added to the log message.</param>
+    /// <param name="threadId"></param>
     /// <param name="category">Optional category to add to the log message.</param>
     /// <param name="loggerName">Optional log name to at to the log message.</param>
     /// <returns>A formated log message.</returns>

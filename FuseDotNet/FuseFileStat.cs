@@ -212,10 +212,10 @@ public struct LinuxX86FileStat
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct TimeSpec : IEquatable<TimeSpec>, IComparable<TimeSpec>
+public readonly struct TimeSpec(long msec) : IEquatable<TimeSpec>, IComparable<TimeSpec>
 {
-    public readonly nint tv_sec;       /* seconds */
-    public readonly nint tv_nsec;        /* and nanoseconds */
+    public readonly nint tv_sec = (nint)(msec / 1000);       /* seconds */
+    public readonly nint tv_nsec = (nint)(msec % 1000 * 1000000);        /* and nanoseconds */
 
     public bool IsOmit => tv_nsec == -2;
 
@@ -226,12 +226,6 @@ public readonly struct TimeSpec : IEquatable<TimeSpec>, IComparable<TimeSpec>
     public TimeSpec(DateTimeOffset dateTime)
         : this(dateTime.ToUnixTimeMilliseconds())
     {
-    }
-
-    public TimeSpec(long msec)
-    {
-        tv_sec = (nint)(msec / 1000);
-        tv_nsec = (nint)(msec % 1000 * 1000000);
     }
 
     public static TimeSpec Now(out TimeSpec timespec) => NativeMethods.time(out timespec);

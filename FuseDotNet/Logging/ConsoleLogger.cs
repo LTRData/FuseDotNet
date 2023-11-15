@@ -5,18 +5,13 @@ namespace FuseDotNet.Logging;
 /// <summary>
 /// Log to the console.
 /// </summary>
-public class ConsoleLogger : ILogger
+/// <remarks>
+/// Initializes a new instance of the <see cref="ConsoleLogger"/> class.
+/// </remarks>
+/// <param name="loggerName">Optional name to be added to each log line.</param>
+public class ConsoleLogger(string loggerName = "") : ILogger
 {
-    private readonly string _loggerName;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ConsoleLogger"/> class.
-    /// </summary>
-    /// <param name="loggerName">Optional name to be added to each log line.</param>
-    public ConsoleLogger(string loggerName = "")
-    {
-        _loggerName = loggerName;
-    }
+    private readonly string _loggerName = loggerName;
 
     /// <inheritdoc />        
     public bool DebugEnabled => true;

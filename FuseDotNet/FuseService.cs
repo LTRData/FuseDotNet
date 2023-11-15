@@ -6,27 +6,21 @@ using System.Threading;
 
 namespace FuseDotNet;
 
-public class FuseService : IDisposable
+public class FuseService(IFuseOperations operations, string[] args) : IDisposable
 {
     public event EventHandler? Stopped;
 
     public event EventHandler<ThreadExceptionEventArgs>? Error;
 
-    public IFuseOperations Operations { get; }
+    public IFuseOperations Operations { get; } = operations;
 
     public string? MountPoint => _args.LastOrDefault();
 
-    private readonly string[] _args;
+    private readonly string[] _args = args;
 
     public bool Running => ServiceThread?.IsAlive ?? false;
 
     protected Thread? ServiceThread { get; private set; }
-
-    public FuseService(IFuseOperations operations, string[] args)
-    {
-        Operations = operations;
-        _args = args;
-    }
 
     public void Start()
     {

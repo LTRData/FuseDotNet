@@ -3,14 +3,9 @@ using FuseDotNet.Extensions;
 
 namespace MirrorFs;
 
-internal class MirrorFsOperations : IFuseOperations
+internal class MirrorFsOperations(string basePath) : IFuseOperations
 {
-    public string BasePath { get; }
-
-    public MirrorFsOperations(string basePath)
-    {
-        BasePath = basePath;
-    }
+    public string BasePath { get; } = basePath;
 
     public string GetPath(ReadOnlyFuseMemory<byte> fileNamePtr)
         => Path.Join(BasePath, FuseHelper.GetStringFromSpan(fileNamePtr.Span));
