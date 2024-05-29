@@ -386,7 +386,7 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
 
             if (logger.DebugEnabled)
             {
-                var pathstr = FuseHelper.GetStringFromSpan(pathPtr.Span);
+                var pathstr = FuseHelper.GetString(pathPtr);
 
                 logger.Debug($"Filling files for directory '{pathstr}'");
             }

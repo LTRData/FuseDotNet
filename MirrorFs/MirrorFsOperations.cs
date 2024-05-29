@@ -8,7 +8,7 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
     public string BasePath { get; } = basePath;
 
     public string GetPath(ReadOnlyFuseMemory<byte> fileNamePtr)
-        => Path.Join(BasePath, FuseHelper.GetStringFromSpan(fileNamePtr.Span));
+        => Path.Join(BasePath, FuseHelper.GetString(fileNamePtr));
 
     public PosixResult Access(ReadOnlyFuseMemory<byte> fileNamePtr, PosixAccessMode mask)
     {

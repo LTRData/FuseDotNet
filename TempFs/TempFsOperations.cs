@@ -10,7 +10,7 @@ internal class TempFsOperations : IFuseOperations
 {
     public PosixResult GetAttr(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
-        var fileName = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var fileName = FuseHelper.GetString(fileNamePtr);
 
         Console.WriteLine($"Getting attributes for file '{fileName}'");
 
@@ -52,7 +52,7 @@ internal class TempFsOperations : IFuseOperations
 
     public PosixResult OpenDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
-        var fileName = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var fileName = FuseHelper.GetString(fileNamePtr);
 
         Console.WriteLine($"Opening directory '{fileName}'");
 
@@ -63,7 +63,7 @@ internal class TempFsOperations : IFuseOperations
 
     public PosixResult Read(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
     {
-        var fileName = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var fileName = FuseHelper.GetString(fileNamePtr);
 
         Console.WriteLine($"Reading file '{fileName}', {buffer.Length} bytes from position {position}");
 
@@ -76,7 +76,7 @@ internal class TempFsOperations : IFuseOperations
 
     public PosixResult ReadDir(ReadOnlyFuseMemory<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
     {
-        var fileName = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var fileName = FuseHelper.GetString(fileNamePtr);
 
         entries = EnumerateEntries(fileName);
 
@@ -133,7 +133,7 @@ internal class TempFsOperations : IFuseOperations
     
     public PosixResult Write(ReadOnlyFuseMemory<byte> fileNamePtr, ReadOnlyFuseMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
     {
-        var fileName = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var fileName = FuseHelper.GetString(fileNamePtr);
 
         Console.WriteLine($"Writing file '{fileName}', {buffer.Length} bytes at position {position}");
 

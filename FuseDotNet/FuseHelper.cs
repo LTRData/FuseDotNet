@@ -147,7 +147,10 @@ public static class FuseHelper
         };
     }
 
-    public static string GetStringFromSpan(ReadOnlySpan<byte> span)
+    public static string GetString(ReadOnlyFuseMemory<byte> buffer)
+        => GetString(buffer.Span);
+
+    public static string GetString(ReadOnlySpan<byte> span)
     {
         if (span.IsEmpty)
         {

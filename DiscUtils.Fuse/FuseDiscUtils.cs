@@ -37,7 +37,7 @@ public class FuseDiscUtils : IFuseOperations
     {
         if (logger.DebugEnabled)
         {
-            logger.Debug($"{method}('{FuseHelper.GetStringFromSpan(fileNamePtr.Span)}') -> {result}");
+            logger.Debug($"{method}('{FuseHelper.GetString(fileNamePtr)}') -> {result}");
         }
 
         return result;
@@ -47,7 +47,7 @@ public class FuseDiscUtils : IFuseOperations
     {
         if (logger.DebugEnabled)
         {
-            logger.Debug($"{method}('{FuseHelper.GetStringFromSpan(fileNamePtr.Span)}', {info}) -> {result}");
+            logger.Debug($"{method}('{FuseHelper.GetString(fileNamePtr)}', {info}) -> {result}");
         }
 
         return result;
@@ -91,7 +91,7 @@ public class FuseDiscUtils : IFuseOperations
 
     public PosixResult Access(ReadOnlyFuseMemory<byte> fileNamePtr, PosixAccessMode mask)
     {
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         if (!FileSystem.Exists(path))
         {
@@ -121,7 +121,7 @@ public class FuseDiscUtils : IFuseOperations
             return Trace(nameof(Create), fileNamePtr, PosixResult.EROFS);
         }
 
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         fileInfo.Context = FileSystem.OpenFile(path, fileInfo.flags.ToFileMode(), fileInfo.flags.ToFileAccess());
 
@@ -165,7 +165,7 @@ public class FuseDiscUtils : IFuseOperations
 
     public PosixResult GetAttr(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         return GetAttr(path, out stat);
     }
@@ -249,7 +249,7 @@ public class FuseDiscUtils : IFuseOperations
             return Trace(nameof(MkDir), fileNamePtr, PosixResult.EROFS);
         }
 
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         FileSystem.CreateDirectory(path);
 
@@ -258,7 +258,7 @@ public class FuseDiscUtils : IFuseOperations
 
     public PosixResult Open(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         fileInfo.Context = FileSystem.OpenFile(path, fileInfo.flags.ToFileMode(), fileInfo.flags.ToFileAccess());
 
@@ -267,7 +267,7 @@ public class FuseDiscUtils : IFuseOperations
 
     public PosixResult OpenDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         if (FileSystem.DirectoryExists(path))
         {
@@ -299,7 +299,7 @@ public class FuseDiscUtils : IFuseOperations
 
     public PosixResult ReadDir(ReadOnlyFuseMemory<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
     {
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         if (FileSystem is IWindowsFileSystem wfs)
         {
@@ -315,7 +315,7 @@ public class FuseDiscUtils : IFuseOperations
                     if (rc != PosixResult.Success)
                     {
                         Trace(nameof(GetAttr), fullPath, rc);
-                        return Enumerable.Empty<FuseDirEntry>();
+                        return [];
                     }
 
                     var info = new FuseDirEntry(dirEntry.Name,
@@ -427,8 +427,8 @@ public class FuseDiscUtils : IFuseOperations
             return Trace(nameof(Rename), from, PosixResult.EROFS);
         }
 
-        var pathFrom = FuseHelper.GetStringFromSpan(from.Span);
-        var pathTo = FuseHelper.GetStringFromSpan(to.Span);
+        var pathFrom = FuseHelper.GetString(from);
+        var pathTo = FuseHelper.GetString(to);
 
         if (FileSystem.FileExists(pathFrom))
         {
@@ -453,7 +453,7 @@ public class FuseDiscUtils : IFuseOperations
             return Trace(nameof(RmDir), fileNamePtr, PosixResult.EROFS);
         }
 
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         FileSystem.DeleteDirectory(path);
 
@@ -487,7 +487,7 @@ public class FuseDiscUtils : IFuseOperations
             return Trace(nameof(Truncate), fileNamePtr, PosixResult.EROFS);
         }
 
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         using var stream = FileSystem.OpenFile(path, FileMode.Open, FileAccess.ReadWrite);
 
@@ -503,7 +503,7 @@ public class FuseDiscUtils : IFuseOperations
             return Trace(nameof(Unlink), fileNamePtr, PosixResult.EROFS);
         }
 
-        var path = FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+        var path = FuseHelper.GetString(fileNamePtr);
 
         FileSystem.DeleteFile(path);
 
@@ -516,7 +516,7 @@ public class FuseDiscUtils : IFuseOperations
 
         if (!atime.IsOmit && FileSystem.CanWrite)
         {
-            path ??= FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+            path ??= FuseHelper.GetString(fileNamePtr);
             FileSystem.SetLastAccessTimeUtc(path, atime.ToDateTime().UtcDateTime);
         }
 
@@ -527,7 +527,7 @@ public class FuseDiscUtils : IFuseOperations
                 return Trace(nameof(UTime), fileNamePtr, PosixResult.EROFS);
             }
 
-            path ??= FuseHelper.GetStringFromSpan(fileNamePtr.Span);
+            path ??= FuseHelper.GetString(fileNamePtr);
             FileSystem.SetLastWriteTimeUtc(path, mtime.ToDateTime().UtcDateTime);
         }
 
