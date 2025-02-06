@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="*" Condition="'$(TargetFramework)' != 'net46'" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="*" />
     <PackageReference Include="System.Memory" Version="*" />
   </ItemGroup>
 
