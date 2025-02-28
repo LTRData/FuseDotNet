@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using LTRData.Extensions.Native.Memory;
+using System.Collections.Generic;
 
 namespace FuseDotNet;
 
 /// <summary>
-/// Directory entry information returned by <see cref="IFuseOperations.ReadDir(ReadOnlyFuseMemory{byte}, out IEnumerable{FuseDirEntry}, ref FuseFileInfo, long, FuseReadDirFlags)"/> implementations.
+/// Directory entry information returned by <see cref="IFuseOperations.ReadDir(ReadOnlyNativeMemory{byte}, out IEnumerable{FuseDirEntry}, ref FuseFileInfo, long, FuseReadDirFlags)"/> implementations.
 /// </summary>
 /// <param name="Name">Name of found file, without path.</param>
 /// <param name="Offset">Unique sequence number of file entry following

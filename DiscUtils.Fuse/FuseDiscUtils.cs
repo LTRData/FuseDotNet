@@ -2,6 +2,7 @@
 using FuseDotNet;
 using FuseDotNet.Extensions;
 using FuseDotNet.Logging;
+using LTRData.Extensions.Native.Memory;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,7 +34,7 @@ public class FuseDiscUtils : IFuseOperations
         return result;
     }
 
-    private PosixResult Trace(string method, ReadOnlyFuseMemory<byte> fileNamePtr, PosixResult result)
+    private PosixResult Trace(string method, ReadOnlyNativeMemory<byte> fileNamePtr, PosixResult result)
     {
         if (logger.DebugEnabled)
         {
@@ -43,7 +44,7 @@ public class FuseDiscUtils : IFuseOperations
         return result;
     }
 
-    private PosixResult Trace(string method, ReadOnlyFuseMemory<byte> fileNamePtr, in FuseFileInfo info, PosixResult result)
+    private PosixResult Trace(string method, ReadOnlyNativeMemory<byte> fileNamePtr, in FuseFileInfo info, PosixResult result)
     {
         if (logger.DebugEnabled)
         {
@@ -89,7 +90,7 @@ public class FuseDiscUtils : IFuseOperations
         this.logger = logger ?? new NullLogger();
     }
 
-    public PosixResult Access(ReadOnlyFuseMemory<byte> fileNamePtr, PosixAccessMode mask)
+    public PosixResult Access(ReadOnlyNativeMemory<byte> fileNamePtr, PosixAccessMode mask)
     {
         var path = FuseHelper.GetString(fileNamePtr);
 
@@ -114,7 +115,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Access), path, PosixResult.Success);
     }
 
-    public PosixResult Create(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo)
+    public PosixResult Create(ReadOnlyNativeMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo)
     {
         if (!FileSystem.CanWrite)
         {
@@ -128,7 +129,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Create), path, PosixResult.Success);
     }
 
-    public PosixResult Flush(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult Flush(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is Stream stream)
         {
@@ -144,7 +145,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Flush), fileNamePtr, fileInfo, PosixResult.EBADF);
     }
 
-    public PosixResult FSync(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo)
+    public PosixResult FSync(ReadOnlyNativeMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is Stream stream)
         {
@@ -160,10 +161,10 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(FSync), fileNamePtr, fileInfo, PosixResult.EBADF);
     }
 
-    public PosixResult FSyncDir(ReadOnlyFuseMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo)
+    public PosixResult FSyncDir(ReadOnlyNativeMemory<byte> fileNamePtr, bool datasync, ref FuseFileInfo fileInfo)
         => Trace(nameof(FSyncDir), fileNamePtr, fileInfo, PosixResult.Success);
 
-    public PosixResult GetAttr(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
+    public PosixResult GetAttr(ReadOnlyNativeMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
         var path = FuseHelper.GetString(fileNamePtr);
 
@@ -236,13 +237,13 @@ public class FuseDiscUtils : IFuseOperations
     {
     }
 
-    public PosixResult IoCtl(ReadOnlyFuseMemory<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data)
+    public PosixResult IoCtl(ReadOnlyNativeMemory<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data)
         => PosixResult.ENOSYS;
 
-    public PosixResult Link(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to)
+    public PosixResult Link(ReadOnlyNativeMemory<byte> from, ReadOnlyNativeMemory<byte> to)
 		=> PosixResult.ENOSYS;
 
-    public PosixResult MkDir(ReadOnlyFuseMemory<byte> fileNamePtr, PosixFileMode mode)
+    public PosixResult MkDir(ReadOnlyNativeMemory<byte> fileNamePtr, PosixFileMode mode)
     {
         if (!FileSystem.CanWrite)
         {
@@ -256,7 +257,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(MkDir), path, PosixResult.Success);
     }
 
-    public PosixResult Open(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult Open(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         var path = FuseHelper.GetString(fileNamePtr);
 
@@ -265,7 +266,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Open), path, PosixResult.Success);
     }
 
-    public PosixResult OpenDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult OpenDir(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         var path = FuseHelper.GetString(fileNamePtr);
 
@@ -277,7 +278,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(OpenDir), path, PosixResult.ENOENT);
     }
 
-    public PosixResult Read(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
+    public PosixResult Read(ReadOnlyNativeMemory<byte> fileNamePtr, NativeMemory<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is Stream stream)
         {
@@ -297,7 +298,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Read), fileNamePtr, fileInfo, PosixResult.EBADF);
     }
 
-    public PosixResult ReadDir(ReadOnlyFuseMemory<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
+    public PosixResult ReadDir(ReadOnlyNativeMemory<byte> fileNamePtr, out IEnumerable<FuseDirEntry> entries, ref FuseFileInfo fileInfo, long offset, FuseReadDirFlags flags)
     {
         var path = FuseHelper.GetString(fileNamePtr);
 
@@ -403,10 +404,10 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(ReadDir), path, PosixResult.Success);
     }
 
-    public PosixResult ReadLink(ReadOnlyFuseMemory<byte> fileNamePtr, FuseMemory<byte> target)
+    public PosixResult ReadLink(ReadOnlyNativeMemory<byte> fileNamePtr, NativeMemory<byte> target)
 		=> PosixResult.ENOSYS;
 
-    public PosixResult Release(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult Release(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is Stream stream)
         {
@@ -417,10 +418,10 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Release), fileNamePtr, fileInfo, PosixResult.EBADF);
     }
 
-    public PosixResult ReleaseDir(ReadOnlyFuseMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
+    public PosixResult ReleaseDir(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
 		=> PosixResult.Success;
 
-    public PosixResult Rename(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to)
+    public PosixResult Rename(ReadOnlyNativeMemory<byte> from, ReadOnlyNativeMemory<byte> to)
     {
         if (!FileSystem.CanWrite)
         {
@@ -446,7 +447,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Rename), pathFrom, PosixResult.Success);
     }
 
-    public PosixResult RmDir(ReadOnlyFuseMemory<byte> fileNamePtr)
+    public PosixResult RmDir(ReadOnlyNativeMemory<byte> fileNamePtr)
     {
         if (!FileSystem.CanWrite)
         {
@@ -460,7 +461,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(RmDir), path, PosixResult.Success);
     }
 
-    public PosixResult StatFs(ReadOnlyFuseMemory<byte> fileNamePtr, out FuseVfsStat statvfs)
+    public PosixResult StatFs(ReadOnlyNativeMemory<byte> fileNamePtr, out FuseVfsStat statvfs)
     {
         statvfs = new()
         {
@@ -477,10 +478,10 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(StatFs), fileNamePtr, PosixResult.Success);
     }
 
-    public PosixResult SymLink(ReadOnlyFuseMemory<byte> from, ReadOnlyFuseMemory<byte> to)
+    public PosixResult SymLink(ReadOnlyNativeMemory<byte> from, ReadOnlyNativeMemory<byte> to)
 		=> PosixResult.ENOSYS;
 
-    public PosixResult Truncate(ReadOnlyFuseMemory<byte> fileNamePtr, long size)
+    public PosixResult Truncate(ReadOnlyNativeMemory<byte> fileNamePtr, long size)
     {
         if (!FileSystem.CanWrite)
         {
@@ -496,7 +497,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Truncate), path, PosixResult.Success);
     }
 
-    public PosixResult Unlink(ReadOnlyFuseMemory<byte> fileNamePtr)
+    public PosixResult Unlink(ReadOnlyNativeMemory<byte> fileNamePtr)
     {
         if (!FileSystem.CanWrite)
         {
@@ -510,7 +511,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(Unlink), path, PosixResult.Success);
     }
 
-    public PosixResult UTime(ReadOnlyFuseMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo)
+    public PosixResult UTime(ReadOnlyNativeMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo)
     {
         string? path = null;
 
@@ -534,7 +535,7 @@ public class FuseDiscUtils : IFuseOperations
         return Trace(nameof(UTime), fileNamePtr, PosixResult.Success);
     }
 
-    public PosixResult Write(ReadOnlyFuseMemory<byte> fileNamePtr, ReadOnlyFuseMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
+    public PosixResult Write(ReadOnlyNativeMemory<byte> fileNamePtr, ReadOnlyNativeMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
     {
         if (!FileSystem.CanWrite)
         {

@@ -1,11 +1,11 @@
 ﻿using FuseDotNet;
 using System;
 
-namespace TestFs;
+namespace TempFs;
 
 public static class Program
 {
-    public static int Main(string[] args)
+    public static int Main(params string[] args)
     {
         try
         {

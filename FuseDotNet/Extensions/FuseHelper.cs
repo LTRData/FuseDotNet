@@ -1,4 +1,5 @@
 ﻿using FuseDotNet.Native;
+using LTRData.Extensions.Native.Memory;
 using System;
 using System.Buffers;
 using System.Collections.ObjectModel;
@@ -25,12 +26,12 @@ public static class FuseHelper
 
 #if NET6_0_OR_GREATER
 
-    public static unsafe FuseMemory<byte> SpanFromIntPtr(nint ptr)
+    public static unsafe NativeMemory<byte> SpanFromIntPtr(nint ptr)
         => new(ptr, MemoryMarshal.CreateReadOnlySpanFromNullTerminated((byte*)ptr).Length);
 
 #else
 
-    public static unsafe FuseMemory<byte> SpanFromIntPtr(nint ptr)
+    public static unsafe NativeMemory<byte> SpanFromIntPtr(nint ptr)
         => ptr == 0
         ? default
         : new(ptr, (int)NativeMethods.strlen(ptr));
@@ -147,7 +148,7 @@ public static class FuseHelper
         };
     }
 
-    public static string GetString(ReadOnlyFuseMemory<byte> buffer)
+    public static string GetString(ReadOnlyNativeMemory<byte> buffer)
         => GetString(buffer.Span);
 
     public static string GetString(ReadOnlySpan<byte> span)
