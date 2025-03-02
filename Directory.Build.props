@@ -14,7 +14,7 @@
     <Company>LTR Data</Company>
     <PackageOutputPath>$(LocalNuGetPath)</PackageOutputPath>
     <Copyright>Copyright (c) Olof Lagerkvist, LTR Data 2022 - 2025</Copyright>
-    <Version>1.0.0.6</Version>
+    <Version>1.0.0.7</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <Company>LTR Data</Company>

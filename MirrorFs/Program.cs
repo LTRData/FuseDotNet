@@ -2,14 +2,14 @@
 
 namespace MirrorFs;
 
-internal class Program
+public static class Program
 {
-    public static int Main(string[] args)
+    public static int Main(params string[] args)
     {
         try
         {
             Console.WriteLine($"Creating mirror file system with base path '{args[0]}'");
-            var operations = new MirrorFsOperations(args[0]);
+            using var operations = new MirrorFsOperations(args[0]);
 
             args = args.Skip(1).ToArray();
 

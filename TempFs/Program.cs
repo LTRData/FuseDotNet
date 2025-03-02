@@ -9,7 +9,7 @@ public static class Program
     {
         try
         {
-            var operations = new TempFsOperations();
+            using var operations = new TempFsOperations();
 
             operations.Mount(args);
 
