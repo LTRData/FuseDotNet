@@ -1,50 +1,114 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FuseDotNet.Logging;
 
 /// <summary>
 /// Log to the console.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="ConsoleLogger"/> class.
-/// </remarks>
-/// <param name="loggerName">Optional name to be added to each log line.</param>
-public class ConsoleLogger(string loggerName = "") : ILogger
+public class ConsoleLogger : ILogger, IDisposable
 {
-    private readonly string _loggerName = loggerName;
+#if NET9_0_OR_GREATER
+    private static readonly Lock Lock = new();
+#else
+    private static readonly object Lock = new();
+#endif
+
+    private readonly string _loggerName;
+    private readonly DateTimeFormatInfo? _dateTimeFormatInfo;
+    private readonly BlockingCollection<(string Message, ConsoleColor Color)> _PendingLogs = [];
+
+    private readonly Task? _WriterTask = null;
+    private bool _disposed;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleLogger"/> class.
+    /// </summary>
+    /// <param name="loggerName">Optional name to be added to each log line.</param>
+    /// <param name="dateTimeFormatInfo">An object that supplies format information for DateTime.</param>
+    public ConsoleLogger(string loggerName = "", DateTimeFormatInfo? dateTimeFormatInfo = null)
+    {
+        _loggerName = loggerName;
+        _dateTimeFormatInfo = dateTimeFormatInfo;
+        _WriterTask = Task.Run(() =>
+        {
+            foreach (var (Message, Color) in _PendingLogs.GetConsumingEnumerable())
+            {
+                WriteMessage(Message, Color);
+            }
+        });
+    }
 
     /// <inheritdoc />        
     public bool DebugEnabled => true;
 
     /// <inheritdoc />
-    public void Debug(FormattableString message) => WriteMessage(ConsoleColor.DarkCyan, message);
+    public void Debug(string message, params object[] args) => EnqueueMessage(Console.ForegroundColor, message, args);
 
     /// <inheritdoc />
-    public void Info(FormattableString message) => WriteMessage(ConsoleColor.Cyan, message);
+    public void Info(string message, params object[] args) => EnqueueMessage(Console.ForegroundColor, message, args);
 
     /// <inheritdoc />
-    public void Warn(FormattableString message) => WriteMessage(ConsoleColor.DarkYellow, message);
+    public void Warn(string message, params object[] args) => EnqueueMessage(ConsoleColor.DarkYellow, message, args);
 
     /// <inheritdoc />
-    public void Error(FormattableString message) => WriteMessage(ConsoleColor.Red, message);
+    public void Error(string message, params object[] args) => EnqueueMessage(ConsoleColor.Red, message, args);
 
     /// <inheritdoc />
-    public void Fatal(FormattableString message) => WriteMessage(ConsoleColor.Red, message);
+    public void Fatal(string message, params object[] args) => EnqueueMessage(ConsoleColor.Red, message, args);
 
-    private void WriteMessage(ConsoleColor newColor, FormattableString message) => WriteMessage(
-            message.FormatMessageForLogging(addDateTime: true, threadId: Environment.CurrentManagedThreadId, loggerName: _loggerName),
-            newColor);
-
-    private static readonly object _lock = new();
-
-    private static void WriteMessage(string message, ConsoleColor newColor)
+    private void EnqueueMessage(ConsoleColor newColor, string message, params object[] args)
     {
-        lock (_lock)
+        if (args.Length > 0)
+        {
+            message = string.Format(message, args);
+        }
+
+        _PendingLogs.Add((message, newColor));
+    }
+
+    private void WriteMessage(string message, ConsoleColor newColor)
+    {
+        lock (Lock) // we only need this lock because we want to have more than one logger in this version
         {
             var origForegroundColor = Console.ForegroundColor;
             Console.ForegroundColor = newColor;
-            Console.WriteLine(message);
+            Console.WriteLine(message.FormatMessageForLogging(true, loggerName: _loggerName, dateTimeFormatInfo: _dateTimeFormatInfo));
             Console.ForegroundColor = origForegroundColor;
         }
+    }
+
+    /// <summary>
+    /// Dispose the object from the native resources.
+    /// </summary>
+    /// <param name="disposing">Whether it was call by <see cref="Dispose()"/></param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                // dispose managed state (managed objects)
+                _PendingLogs.CompleteAdding();
+                _WriterTask?.Wait();
+            }
+
+            // free unmanaged resources (unmanaged objects) and override finalizer
+            // set large fields to null
+            _disposed = true;
+        }
+    }
+
+    /// <summary>
+    /// Dispose the object from the native resources.
+    /// </summary>
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

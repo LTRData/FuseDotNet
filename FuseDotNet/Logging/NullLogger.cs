@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-
-namespace FuseDotNet.Logging;
+﻿namespace FuseDotNet.Logging;
 
 /// <summary>
 /// Ignore all log messages.
@@ -12,23 +9,27 @@ public class NullLogger : ILogger
     public bool DebugEnabled => false;
 
     /// <inheritdoc />
-    public void Debug(FormattableString message)
+    public void Debug(string message, params object[] args)
     {
     }
 
     /// <inheritdoc />
-    public void Error(FormattableString message) => Trace.WriteLine(message?.ToString());
-
-    /// <inheritdoc />
-    public void Fatal(FormattableString message) => Trace.WriteLine(message?.ToString());
-
-    /// <inheritdoc />
-    public void Info(FormattableString message)
+    public void Error(string message, params object[] args)
     {
     }
 
     /// <inheritdoc />
-    public void Warn(FormattableString message)
+    public void Fatal(string message, params object[] args)
+    {
+    }
+
+    /// <inheritdoc />
+    public void Info(string message, params object[] args)
+    {
+    }
+
+    /// <inheritdoc />
+    public void Warn(string message, params object[] args)
     {
     }
 }

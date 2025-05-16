@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Globalization;
 
 namespace FuseDotNet.Logging;
 
@@ -7,35 +6,38 @@ namespace FuseDotNet.Logging;
 /// Write log using OutputDebugString 
 /// </summary>
 /// <remarks>
-/// To see the output in visual studio 
-/// Project + %Properties, Debug tab, check "Enable unmanaged code debugging".
+/// To see the output in debugger
+/// In Visual Studio: Project + %Properties, Debug tab, check "Enable unmanaged code debugging".
 /// </remarks> 
-/// <remarks>
-/// Initializes a new instance of the <see cref="DebugViewLogger"/> class.
-/// </remarks>
 /// <param name="loggerName">Optional name to be added to each log line.</param>
-public class DebugViewLogger(string loggerName = "") : ILogger
+/// <param name="dateTimeFormatInfo">An object that supplies format information for DateTime.</param>
+public class DebugViewLogger(string loggerName = "", DateTimeFormatInfo? dateTimeFormatInfo = null) : ILogger
 {
-    private readonly string _loggerName = loggerName;
-
     /// <inheritdoc />
     public bool DebugEnabled => true;
 
     /// <inheritdoc />
-    public void Debug(FormattableString message) => WriteMessageToDebugView("debug", message);
+    public void Debug(string message, params object[] args) => WriteMessageToDebugView("debug", message, args);
 
     /// <inheritdoc />
-    public void Info(FormattableString message) => WriteMessageToDebugView("info", message);
+    public void Info(string message, params object[] args) => WriteMessageToDebugView("info", message, args);
 
     /// <inheritdoc />
-    public void Warn(FormattableString message) => WriteMessageToDebugView("warn", message);
+    public void Warn(string message, params object[] args) => WriteMessageToDebugView("warn", message, args);
 
     /// <inheritdoc />
-    public void Error(FormattableString message) => WriteMessageToDebugView("error", message);
+    public void Error(string message, params object[] args) => WriteMessageToDebugView("error", message, args);
 
     /// <inheritdoc />
-    public void Fatal(FormattableString message) => WriteMessageToDebugView("fatal", message);
+    public void Fatal(string message, params object[] args) => WriteMessageToDebugView("fatal", message, args);
 
-    private void WriteMessageToDebugView(string category, FormattableString message) =>
-        Trace.WriteLine(message.FormatMessageForLogging(category, _loggerName));
+    private void WriteMessageToDebugView(string category, string message, params object[] args)
+    {
+        if (args?.Length > 0)
+        {
+            message = string.Format(message, args);
+        }
+
+        System.Diagnostics.Debug.WriteLine(message.FormatMessageForLogging(category, loggerName, dateTimeFormatInfo));
+    }
 }

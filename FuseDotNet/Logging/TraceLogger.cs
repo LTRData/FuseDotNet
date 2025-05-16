@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Globalization;
+﻿using System.Diagnostics;
 
 namespace FuseDotNet.Logging;
 
@@ -13,17 +11,17 @@ public class TraceLogger : ILogger
     public bool DebugEnabled => true;
 
     /// <inheritdoc />
-    public void Debug(FormattableString message) => Trace.TraceInformation(message.ToString(CultureInfo.InvariantCulture));
+    public void Debug(string message, params object[] args) => Trace.TraceInformation(message, args);
 
     /// <inheritdoc />
-    public void Info(FormattableString message) => Trace.TraceInformation(message.ToString(CultureInfo.InvariantCulture));
+    public void Info(string message, params object[] args) => Trace.TraceInformation(message, args);
 
     /// <inheritdoc />
-    public void Warn(FormattableString message) => Trace.TraceWarning(message.ToString(CultureInfo.InvariantCulture));
+    public void Warn(string message, params object[] args) => Trace.TraceWarning(message, args);
 
     /// <inheritdoc />
-    public void Error(FormattableString message) => Trace.TraceError(message.ToString(CultureInfo.InvariantCulture));
+    public void Error(string message, params object[] args) => Trace.TraceError(message, args);
 
     /// <inheritdoc />
-    public void Fatal(FormattableString message) => Trace.TraceError(message.ToString(CultureInfo.InvariantCulture));
+    public void Fatal(string message, params object[] args) => Trace.TraceError(message, args);
 }
