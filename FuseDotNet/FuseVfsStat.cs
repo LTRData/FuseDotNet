@@ -10,15 +10,17 @@
  */
 public struct FuseVfsStat
 {
-    public long f_bavail;       /* Number of blocks */
-    public long f_bfree;
-    public long f_blocks;
-    public long f_favail;       /* Number of files (e.g., inodes) */
-    public long f_ffree;
-    public long f_files;
-    public uint f_bsize;        /* Size of blocks counted above */
-    public uint f_flag;
-    public uint f_frsize;       /* Size of fragments */
-    public uint f_fsid;         /* Not meaningful */
-    public uint f_namemax;      /* Same as pathconf(_PC_NAME_MAX) */
+    public ulong f_bsize;  /* Size of blocks counted above */
+    public ulong f_frsize; /* Size of fragments */
+    public ulong f_blocks;
+    public ulong f_bfree;
+    public ulong f_bavail;  /* Number of blocks */
+    
+    public ulong f_files;
+    public ulong f_ffree;
+    public ulong f_favail;  /* Number of files (e.g., inodes) */
+    
+    public ulong f_fsid;    /* Not meaningful */
+    public ulong f_flag;
+    public ulong f_namemax; /* Same as pathconf(_PC_NAME_MAX) */
 }
