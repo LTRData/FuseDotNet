@@ -15,7 +15,7 @@ namespace FuseDotNet;
 /// The fuse operation proxy.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="FuseOperationProxy"/> class.
+/// Initializes a new instance of the <see cref="LinuxFuseOperationProxy"/> class.
 /// </remarks>
 /// <param name="operations">
 /// A <see cref="IFuseOperations"/> that contains the custom implementation of the driver.
@@ -474,6 +474,18 @@ internal sealed class LinuxFuseOperationProxy(IFuseOperations operations, ILogge
     }
 }
 
+/// <summary>
+/// The fuse operation proxy.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="BSDFuseOperationProxy"/> class.
+/// </remarks>
+/// <param name="operations">
+/// A <see cref="IFuseOperations"/> that contains the custom implementation of the driver.
+/// </param>
+/// <param name="logger">
+/// A <see cref="ILogger"/> that handle all logging.
+/// </param>
 internal sealed class BSDFuseOperationProxy(IFuseOperations operations, ILogger logger)
 {
     private readonly IFuseOperations operations = operations;

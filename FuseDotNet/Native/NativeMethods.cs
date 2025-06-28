@@ -28,7 +28,7 @@ internal static class NativeMethods
     /// </summary>
     /// <param name="argc"></param>
     /// <param name="argv">Array of pointers to UTF8 encoded arguments that describe the mount.</param>
-    /// <param name="operations">Instance of <see cref="FuseOperations"/> that will be called for each request made by the kernel.</param>
+    /// <param name="operations">Instance of <see cref="LinuxFuseOperations"/> that will be called for each request made by the kernel.</param>
     /// <param name="operationsSize"></param>
     /// <param name="userData"></param>
     /// <returns><see cref="PosixResult"/></returns>
@@ -37,6 +37,17 @@ internal static class NativeMethods
         [In, MarshalAs(UnmanagedType.LPArray)] nint[] argv,
         [In] LinuxFuseOperations? operations, nint operationsSize, nint userData);
     
+    /// <summary>
+    /// Mount a new Fuse Volume.
+    /// This function block until the device is unmounted.
+    /// If the mount fails, it will directly return an error.
+    /// </summary>
+    /// <param name="argc"></param>
+    /// <param name="argv">Array of pointers to UTF8 encoded arguments that describe the mount.</param>
+    /// <param name="operations">Instance of <see cref="BSDFuseOperations"/> that will be called for each request made by the kernel.</param>
+    /// <param name="operationsSize"></param>
+    /// <param name="userData"></param>
+    /// <returns><see cref="PosixResult"/></returns>
     [DllImport(LIB_FUSE, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "fuse_main_real")]
     internal static extern PosixResult BSDFuseMainReal(int argc,
         [In, MarshalAs(UnmanagedType.LPArray)] nint[] argv,

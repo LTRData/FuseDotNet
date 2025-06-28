@@ -46,12 +46,26 @@ public static class Fuse
     public static PosixResult CallMain(IEnumerable<string> args)
     {
         var utf8args = args.Select(StringToCoTaskMemUTF8).ToArray();
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) == true) {
 
-        var status = NativeMethods.LinuxFuseMainReal(utf8args.Length, utf8args, null, 0, 0);
+            var status = NativeMethods.LinuxFuseMainReal(utf8args.Length, utf8args, null, 0, 0);
 
-        Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
+            Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
 
-        return status;
+            return status;
+        }
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) == true) {
+            
+            var status = NativeMethods.BSDFuseMainReal(utf8args.Length, utf8args, null, 0, 0);
+
+            Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
+
+            return status;
+        }
+
+        return PosixResult.ENOTSUP;
     }
 
     /// <summary>
