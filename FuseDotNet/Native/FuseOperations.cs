@@ -112,6 +112,7 @@ internal sealed class LinuxFuseOperations
 	public fuse_f_lseek? lseek;
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
 internal sealed class BSDFuseOperations
 {
     #region Delegates

@@ -56,7 +56,8 @@ public static class Fuse
             return status;
         }
         
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) == true) {
+        #if NET6_0_OR_GREATER
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) == true && RuntimeInformation.OSArchitecture == Architecture.X64) {
             
             var status = NativeMethods.BSDFuseMainReal(utf8args.Length, utf8args, null, 0, 0);
 
@@ -64,6 +65,7 @@ public static class Fuse
 
             return status;
         }
+        #endif
 
         return PosixResult.ENOTSUP;
     }
@@ -76,7 +78,7 @@ public static class Fuse
     /// <param name="args">Command line arguments to pass to fuse_main().</param>
     /// <param name="logger"><see cref="ILogger"/> that will log all FuseDotNet debug information.</param>
     /// <exception cref="PosixException">If the mount fails.</exception>
-    public static unsafe void Mount(this IFuseOperations operations, IEnumerable<string> args, ILogger? logger = null)
+    public static void Mount(this IFuseOperations operations, IEnumerable<string> args, ILogger? logger = null)
     {
         logger ??= new NullLogger();
 
@@ -141,7 +143,8 @@ public static class Fuse
             }
         }
         
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) == true)
+        #if NET6_0_OR_GREATER
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) == true && RuntimeInformation.OSArchitecture == Architecture.X64)
         {
             var fuseOperationProxy = new BSDFuseOperationProxy(operations, logger);
             var fuseOperations = new BSDFuseOperations
@@ -201,5 +204,6 @@ public static class Fuse
                 throw new PosixException(status);
             }
         }
+        #endif
     }
 }

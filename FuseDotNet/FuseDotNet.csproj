@@ -6,7 +6,7 @@
     <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\FuseDotNet.snk</AssemblyOriginatorKeyFile>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard20;netstandard21;net8.0;net9.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
