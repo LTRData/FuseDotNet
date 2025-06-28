@@ -32,10 +32,15 @@ internal static class NativeMethods
     /// <param name="operationsSize"></param>
     /// <param name="userData"></param>
     /// <returns><see cref="PosixResult"/></returns>
-    [DllImport(LIB_FUSE, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-    internal static extern PosixResult fuse_main_real(int argc,
+    [DllImport(LIB_FUSE, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "fuse_main_real")]
+    internal static extern PosixResult LinuxFuseMainReal(int argc,
         [In, MarshalAs(UnmanagedType.LPArray)] nint[] argv,
-        [In] FuseOperations? operations, nint operationsSize, nint userData);
+        [In] LinuxFuseOperations? operations, nint operationsSize, nint userData);
+    
+    [DllImport(LIB_FUSE, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true, EntryPoint = "fuse_main_real")]
+    internal static extern PosixResult BSDFuseMainReal(int argc,
+        [In, MarshalAs(UnmanagedType.LPArray)] nint[] argv,
+        [In] BSDFuseOperations? operations, nint operationsSize, nint userData);
 
     [DllImport(LIB_C, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     internal static extern PosixResult unmount([In, MarshalAs(UnmanagedStringType)] string dir, int flags);

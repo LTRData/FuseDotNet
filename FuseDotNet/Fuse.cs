@@ -17,10 +17,10 @@ namespace FuseDotNet;
 /// </summary>
 public static class Fuse
 {
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
+    #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
     public static nint StringToCoTaskMemUTF8(string? arg)
         => Marshal.StringToCoTaskMemUTF8(arg);
-#else
+    #else
     public static unsafe nint StringToCoTaskMemUTF8(string? arg)
     {
         if (arg == null)
@@ -35,7 +35,7 @@ public static class Fuse
         bytes[array.Length] = 0;
         return ptr;
     }
-#endif
+    #endif
 
     /// <summary>
     /// Call %Fuse without file system operations. Useful for example to list available command line
@@ -47,7 +47,7 @@ public static class Fuse
     {
         var utf8args = args.Select(StringToCoTaskMemUTF8).ToArray();
 
-        var status = NativeMethods.fuse_main_real(utf8args.Length, utf8args, null, 0, 0);
+        var status = NativeMethods.LinuxFuseMainReal(utf8args.Length, utf8args, null, 0, 0);
 
         Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
 
@@ -62,70 +62,130 @@ public static class Fuse
     /// <param name="args">Command line arguments to pass to fuse_main().</param>
     /// <param name="logger"><see cref="ILogger"/> that will log all FuseDotNet debug information.</param>
     /// <exception cref="PosixException">If the mount fails.</exception>
-    public static void Mount(this IFuseOperations operations, IEnumerable<string> args, ILogger? logger = null)
+    public static unsafe void Mount(this IFuseOperations operations, IEnumerable<string> args, ILogger? logger = null)
     {
         logger ??= new NullLogger();
 
-        var fuseOperationProxy = new FuseOperationProxy(operations, logger);
-
-        var fuseOperations = new FuseOperations
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) == true)
         {
-            getattr = fuseOperationProxy.getattr,
-            readlink = fuseOperationProxy.readlink,
-            mknod = null, // fuseOperationProxy.mknod,
-            mkdir = fuseOperationProxy.mkdir,
-            unlink = fuseOperationProxy.unlink,
-            rmdir = fuseOperationProxy.rmdir,
-            symlink = fuseOperationProxy.symlink,
-            rename = fuseOperationProxy.rename,
-            link = fuseOperationProxy.link,
-            chmod = null, // fuseOperationProxy.chmod,
-            chown = null, // fuseOperationProxy.chown,
-            truncate = fuseOperationProxy.truncate,
-            open = fuseOperationProxy.open,
-            read = fuseOperationProxy.read,
-            write = fuseOperationProxy.write,
-            statfs = fuseOperationProxy.statfs,
-            flush = fuseOperationProxy.flush,
-            release = fuseOperationProxy.release,
-            fsync = fuseOperationProxy.fsync,
-            setxattr = null, // fuseOperationProxy.setxattr,
-            getxattr = null, // fuseOperationProxy.getxattr,
-            listxattr = null, // fuseOperationProxy.listxattr,
-            removexattr = null, // fuseOperationProxy.removexattr,
-            opendir = fuseOperationProxy.opendir,
-            readdir = fuseOperationProxy.readdir,
-            releasedir = fuseOperationProxy.releasedir,
-            fsyncdir = fuseOperationProxy.fsyncdir,
-            init = fuseOperationProxy.init,
-            destroy = fuseOperationProxy.destroy,
-            access = fuseOperationProxy.access,
-            create = fuseOperationProxy.create,
-            @lock = null, // fuseOperationProxy.@lock,
-            utimens = fuseOperationProxy.utimens,
-            bmap = null, // fuseOperationProxy.bmap,
-            ioctl = fuseOperationProxy.ioctl,
-            poll = null, // fuseOperationProxy.poll,
-            write_buf = null, // fuseOperationProxy.write_buf,
-            read_buf = null, // fuseOperationProxy.read_buf,
-            flock = null, // fuseOperationProxy.flock,
-            fallocate = null, // fuseOperationProxy.fallocate
-            copy_file_range = null, // fuseOperationProxy.copy_file_range
-            lseek = null, // fuseOperationProxy.lseek
-        };
+            var fuseOperationProxy = new LinuxFuseOperationProxy(operations, logger);
+            var fuseOperations = new LinuxFuseOperations
+            {
+                getattr         = fuseOperationProxy.getattr,
+                readlink        = fuseOperationProxy.readlink,
+                mknod           = null, // fuseOperationProxy.mknod,
+                mkdir           = fuseOperationProxy.mkdir,
+                unlink          = fuseOperationProxy.unlink,
+                rmdir           = fuseOperationProxy.rmdir,
+                symlink         = fuseOperationProxy.symlink,
+                rename          = fuseOperationProxy.rename,
+                link            = fuseOperationProxy.link,
+                chmod           = null, // fuseOperationProxy.chmod,
+                chown           = null, // fuseOperationProxy.chown,
+                truncate        = fuseOperationProxy.truncate,
+                open            = fuseOperationProxy.open,
+                read            = fuseOperationProxy.read,
+                write           = fuseOperationProxy.write,
+                statfs          = fuseOperationProxy.statfs,
+                flush           = fuseOperationProxy.flush,
+                release         = fuseOperationProxy.release,
+                fsync           = fuseOperationProxy.fsync,
+                setxattr        = null, // fuseOperationProxy.setxattr,
+                getxattr        = null, // fuseOperationProxy.getxattr,
+                listxattr       = null, // fuseOperationProxy.listxattr,
+                removexattr     = null, // fuseOperationProxy.removexattr,
+                opendir         = fuseOperationProxy.opendir,
+                readdir         = fuseOperationProxy.readdir,
+                releasedir      = fuseOperationProxy.releasedir,
+                fsyncdir        = fuseOperationProxy.fsyncdir,
+                init            = fuseOperationProxy.init,
+                destroy         = fuseOperationProxy.destroy,
+                access          = fuseOperationProxy.access,
+                create          = fuseOperationProxy.create,
+                @lock           = null, // fuseOperationProxy.@lock,
+                utimens         = fuseOperationProxy.utimens,
+                bmap            = null, // fuseOperationProxy.bmap,
+                ioctl           = fuseOperationProxy.ioctl,
+                poll            = null, // fuseOperationProxy.poll,
+                write_buf       = null, // fuseOperationProxy.write_buf,
+                read_buf        = null, // fuseOperationProxy.read_buf,
+                flock           = null, // fuseOperationProxy.flock,
+                fallocate       = null, // fuseOperationProxy.fallocate
+                copy_file_range = null, // fuseOperationProxy.copy_file_range
+                lseek           = null, // fuseOperationProxy.lseek
+            };
+            var utf8args = args.Select(StringToCoTaskMemUTF8).ToArray();
+            var status = NativeMethods.LinuxFuseMainReal(utf8args.Length, utf8args, fuseOperations, Marshal.SizeOf(fuseOperations), 0);
 
-        var utf8args = args.Select(StringToCoTaskMemUTF8).ToArray();
+            Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
 
-        var status = NativeMethods.fuse_main_real(utf8args.Length, utf8args, fuseOperations, Marshal.SizeOf(fuseOperations), 0);
+            GC.KeepAlive(fuseOperations);
 
-        Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
-
-        GC.KeepAlive(fuseOperations);
-
-        if (status != PosixResult.Success)
+            if (status != PosixResult.Success)
+            {
+                throw new PosixException(status);
+            }
+        }
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) == true)
         {
-            throw new PosixException(status);
+            var fuseOperationProxy = new BSDFuseOperationProxy(operations, logger);
+            var fuseOperations = new BSDFuseOperations
+            {
+                getattr         = fuseOperationProxy.getattr,
+                readlink        = fuseOperationProxy.readlink,
+                mknod           = null, // fuseOperationProxy.mknod,
+                mkdir           = fuseOperationProxy.mkdir,
+                unlink          = fuseOperationProxy.unlink,
+                rmdir           = fuseOperationProxy.rmdir,
+                symlink         = fuseOperationProxy.symlink,
+                rename          = fuseOperationProxy.rename,
+                link            = fuseOperationProxy.link,
+                chmod           = null, // fuseOperationProxy.chmod,
+                chown           = null, // fuseOperationProxy.chown,
+                truncate        = fuseOperationProxy.truncate,
+                open            = fuseOperationProxy.open,
+                read            = fuseOperationProxy.read,
+                write           = fuseOperationProxy.write,
+                statfs          = fuseOperationProxy.statfs,
+                flush           = fuseOperationProxy.flush,
+                release         = fuseOperationProxy.release,
+                fsync           = fuseOperationProxy.fsync,
+                setxattr        = null, // fuseOperationProxy.setxattr,
+                getxattr        = null, // fuseOperationProxy.getxattr,
+                listxattr       = null, // fuseOperationProxy.listxattr,
+                removexattr     = null, // fuseOperationProxy.removexattr,
+                opendir         = fuseOperationProxy.opendir,
+                readdir         = fuseOperationProxy.readdir,
+                releasedir      = fuseOperationProxy.releasedir,
+                fsyncdir        = fuseOperationProxy.fsyncdir,
+                init            = fuseOperationProxy.init,
+                destroy         = fuseOperationProxy.destroy,
+                access          = fuseOperationProxy.access,
+                create          = fuseOperationProxy.create,
+                @lock           = null, // fuseOperationProxy.@lock,
+                utimens         = fuseOperationProxy.utimens,
+                bmap            = null, // fuseOperationProxy.bmap,
+                ioctl           = fuseOperationProxy.ioctl,
+                poll            = null, // fuseOperationProxy.poll,
+                write_buf       = null, // fuseOperationProxy.write_buf,
+                read_buf        = null, // fuseOperationProxy.read_buf,
+                flock           = null, // fuseOperationProxy.flock,
+                fallocate       = null, // fuseOperationProxy.fallocate
+                copy_file_range = null, // fuseOperationProxy.copy_file_range
+                lseek           = null, // fuseOperationProxy.lseek
+            };
+            var utf8args = args.Select(StringToCoTaskMemUTF8).ToArray();
+            var status = NativeMethods.BSDFuseMainReal(utf8args.Length, utf8args, fuseOperations, Marshal.SizeOf(fuseOperations), 0);
+
+            Array.ForEach(utf8args, Marshal.FreeCoTaskMem);
+
+            GC.KeepAlive(fuseOperations);
+
+            if (status != PosixResult.Success)
+            {
+                throw new PosixException(status);
+            }
         }
     }
 }
-
