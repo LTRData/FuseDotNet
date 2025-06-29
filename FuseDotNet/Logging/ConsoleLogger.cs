@@ -62,6 +62,11 @@ public class ConsoleLogger : ILogger, IDisposable
 
     private void EnqueueMessage(ConsoleColor newColor, string message, params object[] args)
     {
+        if (_PendingLogs.IsCompleted)
+        {
+            return;
+        }
+
         if (args.Length > 0)
         {
             message = string.Format(message, args);

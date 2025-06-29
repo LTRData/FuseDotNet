@@ -39,7 +39,7 @@ internal sealed class FuseOperations
 	public delegate int fuse_f_open(nint path, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_read(nint path, nint buffer, nint size, long position, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_write(nint path, nint buffer, nint size, long position, ref FuseFileInfo fileInfo);
-	public delegate int fuse_f_statfs(nint path, ref FuseVfsStat statvfs);
+	public delegate int fuse_f_statfs(nint path, nint statptr);
 	public delegate int fuse_f_flush(nint path, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_release(nint path, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_fsync(nint path, int datasync, ref FuseFileInfo fileInfo);

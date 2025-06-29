@@ -340,11 +340,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         }
     }
 
-    internal int statfs(nint path, ref FuseVfsStat statvfs)
+    internal int statfs(nint path, nint statptr)
     {
         try
         {
-            var result = operations.StatFs(FuseHelper.SpanFromIntPtr(path), out statvfs);
+            var result = operations.StatFs(FuseHelper.SpanFromIntPtr(path), out var statvfs);
+            statvfs.MarshalToNative(statptr);
             return -(int)result;
         }
         catch (Exception ex)
@@ -404,7 +405,7 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
                         logger.Debug($"Directory entry: {file}");
                     }
 
-                    file.Stat.MarshalToNative(stat);
+                    file.Stat.MarshalToNative((nint)stat);
 
                     var length = Encoding.UTF8.GetByteCount(file.Name) + 1;  // Extra byte for null terminator
 
