@@ -61,27 +61,27 @@ public struct FuseFileInfo
 {
     static unsafe FuseFileInfo()
     {
-        if (RuntimeInformation.OSArchitecture == Architecture.X86)
+        switch (RuntimeInformation.OSArchitecture)
         {
-            if (sizeof(FuseFileInfo) != 32)
-            {
-                throw new PlatformNotSupportedException($"Invalid packing of structure FuseFileInfo. Should be 32 bytes, is {sizeof(FuseFileInfo)} bytes");
-            }
+            case Architecture.X86:
+                if (sizeof(FuseFileInfo) != 32)
+                {
+                    throw new PlatformNotSupportedException($"Invalid packing of structure FuseFileInfo. Should be 32 bytes, is {sizeof(FuseFileInfo)} bytes");
+                }
 
-            return;
+                break;
+
+            case Architecture.X64 or Architecture.Arm or Architecture.Arm64:
+                if (sizeof(FuseFileInfo) != 40)
+                {
+                    throw new PlatformNotSupportedException($"Invalid packing of structure FuseFileInfo. Should be 40 bytes, is {sizeof(FuseFileInfo)} bytes");
+                }
+
+                break;
+
+            default:
+                throw new PlatformNotSupportedException($"Current platform {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture} not supported by FuseDotNet library");
         }
-
-        if (RuntimeInformation.OSArchitecture is Architecture.X64 or Architecture.Arm or Architecture.Arm64)
-        {
-            if (sizeof(FuseFileInfo) != 40)
-            {
-                throw new PlatformNotSupportedException($"Invalid packing of structure FuseFileInfo. Should be 40 bytes, is {sizeof(FuseFileInfo)} bytes");
-            }
-
-            return;
-        }
-
-        throw new PlatformNotSupportedException($"Current platform {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture} not supported by FuseDotNet library");
     }
 
     /** Open flags.  Available in open() and release() */
