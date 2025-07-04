@@ -20,7 +20,7 @@ FuseDotNet is distributed under a version of the "MIT License",
 which is a BSD-like license. See the 'LICENSE.txt' file for details.
 
 ## Environment
-* Linux: x86 or x64
+* Linux: x86, x64, arm32 or arm64
 * FreeBSD: x64
 * Fuse: Fuse3
 
@@ -43,9 +43,10 @@ file system applications.
 #### Sample code
 
 There are sample implementations, "mirror" and "tempfs", that show basic
-implementation of the library. There is also a "DiscUtils.Fuse" package that
+implementation of the library. There is also a "DiscUtils.MountFuse" package that
 implements a FuseDotNet file system using `IFileSystem` implementations in DiscUtils
-library.
+library. Source code for that library is in https://github.com/LTRData/DiscUtils
+repository.
 
 ## Unmounting
 Just run the below command to unmount a file system.
