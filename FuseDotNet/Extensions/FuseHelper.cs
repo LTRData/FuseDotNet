@@ -2,7 +2,7 @@
 using LTRData.Extensions.Native.Memory;
 using System;
 using System.Buffers;
-using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,10 +19,10 @@ namespace FuseDotNet.Extensions;
 /// </summary>
 public static class FuseHelper
 {
-    public static ReadOnlyCollection<FuseDirEntry> DotEntries { get; } = Array.AsReadOnly(new FuseDirEntry[] {
-        new(".", 0, 0, new() { st_mode = PosixFileMode.Directory }),
-        new("..", 0, 0, new() { st_mode = PosixFileMode.Directory })
-    });
+    public static ImmutableArray<FuseDirEntry> DotEntries { get; } = [
+        new(Name: ".", Offset: 0, Flags: 0, Stat: new() { st_mode = PosixFileMode.Directory }),
+        new(Name: "..", Offset: 0, Flags: 0, Stat: new() { st_mode = PosixFileMode.Directory })
+    ];
 
 #if NET6_0_OR_GREATER
 
@@ -137,13 +137,12 @@ public static class FuseHelper
             FileNotFoundException => PosixResult.ENOENT,
             UnauthorizedAccessException => PosixResult.EPERM,
             DirectoryNotFoundException => PosixResult.ENOTDIR,
-            InvalidOperationException => PosixResult.EOPNOTSUPP,
+            InvalidOperationException => PosixResult.ENOTSUP,
             NotSupportedException or NotImplementedException => PosixResult.ENOSYS,
             PathTooLongException => PosixResult.ENAMETOOLONG,
-            OutOfMemoryException => PosixResult.ENOMEM,
+            OutOfMemoryException or InsufficientExecutionStackException or StackOverflowException => PosixResult.ENOMEM,
             ThreadAbortException or ThreadInterruptedException or OperationCanceledException => PosixResult.EINTR,
-            ArgumentException or ArgumentOutOfRangeException or IndexOutOfRangeException or
-            ArgumentNullException or NullReferenceException => PosixResult.EINVAL,
+            ArgumentException or IndexOutOfRangeException or NullReferenceException => PosixResult.EINVAL,
             _ => PosixResult.EIO
         };
     }

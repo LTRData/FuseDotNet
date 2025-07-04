@@ -3,7 +3,6 @@ using FuseDotNet.Extensions;
 using LTRData.Extensions.Native.Memory;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TempFs;
 
@@ -40,6 +39,8 @@ internal class TempFsOperations : IFuseOperations
         return PosixResult.Success;
     }
 
+    private static readonly byte[] FileContents = "Hello world!\n"u8.ToArray();
+
     private readonly PosixFileMode fileModeDirs = PosixFileMode.Directory
         | PosixFileMode.OwnerAll
         | PosixFileMode.GroupReadExecute
@@ -59,8 +60,6 @@ internal class TempFsOperations : IFuseOperations
 
         return PosixResult.Success;
     }
-
-    private static readonly byte[] FileContents = Encoding.UTF8.GetBytes("Hello world!\n");
 
     public PosixResult Read(ReadOnlyNativeMemory<byte> fileNamePtr, NativeMemory<byte> buffer, long position, out int readLength, ref FuseFileInfo fileInfo)
     {
@@ -88,11 +87,11 @@ internal class TempFsOperations : IFuseOperations
     {
         Console.WriteLine($"Reading directory '{fileName}'");
 
-        yield return new(".", 0, 0, new() { st_mode = PosixFileMode.Directory });
+        yield return new(Name: ".", Offset: 0, Flags: 0, Stat: new() { st_mode = PosixFileMode.Directory });
 
-        yield return new("..", 0, 0, new() { st_mode = PosixFileMode.Directory });
+        yield return new(Name: "..", Offset: 0, Flags: 0, Stat: new() { st_mode = PosixFileMode.Directory });
 
-        yield return new("test.txt", 0, 0, new() { st_mode = PosixFileMode.Regular });
+        yield return new(Name: "test.txt", Offset: 0, Flags: 0, Stat: new() { st_mode = PosixFileMode.Regular });
     }
 
     public PosixResult Open(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo) => PosixResult.Success;
@@ -148,7 +147,13 @@ internal class TempFsOperations : IFuseOperations
     
     public PosixResult UTime(ReadOnlyNativeMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
-    public PosixResult Create(ReadOnlyNativeMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo) => PosixResult.Success;
+    public PosixResult Create(ReadOnlyNativeMemory<byte> fileNamePtr, int mode, ref FuseFileInfo fileInfo) => PosixResult.Success;
     
     public PosixResult IoCtl(ReadOnlyNativeMemory<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
+
+    public PosixResult ChMod(NativeMemory<byte> fileNamePtr, PosixFileMode mode) => PosixResult.Success;
+
+    public PosixResult ChOwn(NativeMemory<byte> fileNamePtr, int uid, int gid) => PosixResult.Success;
+
+    public PosixResult FAllocate(NativeMemory<byte> fileNamePtr, FuseAllocateMode mode, long offset, long length, ref FuseFileInfo fileInfo) => PosixResult.Success;
 }

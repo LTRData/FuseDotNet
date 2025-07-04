@@ -48,6 +48,6 @@ internal static class NativeMethods
 
     [DllImport(LIB_C, CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     [return: MarshalAs(UnmanagedStringType)]
-    internal static extern string strerror(PosixResult errno);
+    internal static extern string strerror(int errno);
 
 }

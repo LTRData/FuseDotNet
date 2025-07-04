@@ -33,12 +33,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.ReadLink(FuseHelper.SpanFromIntPtr(path), new(target, (int)size));
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"readlink(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -47,12 +47,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Link(from: FuseHelper.SpanFromIntPtr(path), to: FuseHelper.SpanFromIntPtr(path));
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"link(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -61,12 +61,40 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.MkDir(FuseHelper.SpanFromIntPtr(path), mode);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"mkdir(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
+        }
+    }
+
+    internal int chmod(nint path, PosixFileMode mode)
+    {
+        try
+        {
+            var result = operations.ChMod(FuseHelper.SpanFromIntPtr(path), mode);
+            return -result;
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"mkdir(): {ex}");
+            return -ex.ToPosixResult();
+        }
+    }
+
+    internal int chown(nint path, int uid, int gid)
+    {
+        try
+        {
+            var result = operations.ChOwn(FuseHelper.SpanFromIntPtr(path), uid, gid);
+            return -result;
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"mkdir(): {ex}");
+            return -ex.ToPosixResult();
         }
     }
 
@@ -75,12 +103,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Flush(FuseHelper.SpanFromIntPtr(path), ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"flush(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -94,12 +122,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
                 return writtenLength;
             }
 
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"write(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -108,12 +136,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Unlink(FuseHelper.SpanFromIntPtr(path));
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"unlink(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -122,12 +150,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.IoCtl(FuseHelper.SpanFromIntPtr(path), cmd, arg, ref fileInfo, flags, data);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"open(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -137,26 +165,26 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         {
             var ts = (TimeSpec*)timespec;
             var result = operations.UTime(FuseHelper.SpanFromIntPtr(path), atime: ts[0], mtime: ts[1], ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"utimens(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
-    internal int create(nint path, PosixFileMode mode, ref FuseFileInfo fileInfo)
+    internal int create(nint path, int mode, ref FuseFileInfo fileInfo)
     {
         try
         {
             var result = operations.Create(FuseHelper.SpanFromIntPtr(path), mode, ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"create(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -165,12 +193,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.SymLink(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(target));
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"symlink(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -179,12 +207,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Rename(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(target));
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"rename(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -193,12 +221,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.RmDir(FuseHelper.SpanFromIntPtr(path));
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"rmdir(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -207,12 +235,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Truncate(FuseHelper.SpanFromIntPtr(path), size);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"truncate(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -221,12 +249,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Open(FuseHelper.SpanFromIntPtr(path), ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"open(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -235,12 +263,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.OpenDir(FuseHelper.SpanFromIntPtr(path), ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"opendir(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -249,12 +277,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.FSync(FuseHelper.SpanFromIntPtr(path), datasync != 0, ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"fsync(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -263,12 +291,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Release(FuseHelper.SpanFromIntPtr(path), ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"release(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -277,12 +305,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.ReleaseDir(FuseHelper.SpanFromIntPtr(path), ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"releasedir(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -305,12 +333,26 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.Access(FuseHelper.SpanFromIntPtr(path), mask);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"access(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
+        }
+    }
+
+    internal int fallocate(nint path, FuseAllocateMode mode, long offset, long length, ref FuseFileInfo fileInfo)
+    {
+        try
+        {
+            var result = operations.FAllocate(FuseHelper.SpanFromIntPtr(path), mode, offset, length, ref fileInfo);
+            return -result;
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"access(): {ex}");
+            return -ex.ToPosixResult();
         }
     }
 
@@ -331,12 +373,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         try
         {
             var result = operations.FSyncDir(FuseHelper.SpanFromIntPtr(path), datasync != 0, ref fileInfo);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"fsyncdir(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -346,12 +388,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         {
             var result = operations.StatFs(FuseHelper.SpanFromIntPtr(path), out var statvfs);
             statvfs.MarshalToNative(statptr);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"statfs(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -361,12 +403,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         {
             var result = operations.GetAttr(FuseHelper.SpanFromIntPtr(path), out var stat, ref fileInfo);
             stat.MarshalToNative(statptr);
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"getattr(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -380,7 +422,7 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
 
             if (result != PosixResult.Success)
             {
-                return -(int)result;
+                return -result;
             }
 
             var fuse_fill_dir = (delegate* unmanaged[Cdecl]<nint, in byte, void*, long, FuseFillDirFlags, int>)fuse_fill_dir_t;
@@ -446,7 +488,7 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         catch (Exception ex)
         {
             logger.Error($"readdir(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 
@@ -460,12 +502,12 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
                 return readLength;
             }
 
-            return -(int)result;
+            return -result;
         }
         catch (Exception ex)
         {
             logger.Error($"read(): {ex}");
-            return -(int)ex.ToPosixResult();
+            return -ex.ToPosixResult();
         }
     }
 }

@@ -27,7 +27,7 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
         }
     }
 
-    public PosixResult Create(ReadOnlyNativeMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo) => PosixResult.ENOSYS;
+    public PosixResult Create(ReadOnlyNativeMemory<byte> fileNamePtr, int mode, ref FuseFileInfo fileInfo) => Open(fileNamePtr, ref fileInfo);
 
     public void Dispose() { }
 
@@ -40,6 +40,7 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
     public PosixResult GetAttr(ReadOnlyNativeMemory<byte> fileNamePtr, out FuseFileStat stat, ref FuseFileInfo fileInfo)
     {
         var path = GetPath(fileNamePtr);
+
         if (File.Exists(path))
         {
             var info = new FileInfo(GetPath(fileNamePtr));
@@ -85,9 +86,9 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
     public PosixResult Open(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
         fileInfo.Context = File.Open(GetPath(fileNamePtr),
-                                           fileInfo.flags.ToFileMode(),
-                                           fileInfo.flags.ToFileAccess(),
-                                           fileInfo.flags.ToFileShare());
+                                     fileInfo.flags.ToFileMode(),
+                                     fileInfo.flags.ToFileAccess(),
+                                     fileInfo.flags.ToFileShare());
 
         return PosixResult.Success;
     }
@@ -163,7 +164,13 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
 
     public PosixResult StatFs(ReadOnlyNativeMemory<byte> fileNamePtr, out FuseVfsStat statvfs)
     {
-        statvfs = default;
+        statvfs = new()
+        {
+            f_bsize = 512,
+            f_bfree = 1,
+            f_bavail = 1,
+        };
+
         return PosixResult.Success;
     }
 
@@ -206,6 +213,43 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
         stream.Position = position;
         stream.Write(buffer.Span);
         writtenLength = buffer.Length;
+
+        return PosixResult.Success;
+    }
+
+    public PosixResult ChMod(NativeMemory<byte> fileNamePtr, PosixFileMode mode)
+    {
+#if NET7_0_OR_GREATER
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(GetPath(fileNamePtr), (UnixFileMode)mode);
+        }
+
+        return PosixResult.Success;
+#else
+        return PosixResult.Success;
+#endif
+    }
+
+    public PosixResult ChOwn(NativeMemory<byte> fileNamePtr, int uid, int gid) => PosixResult.Success;
+
+    public PosixResult FAllocate(NativeMemory<byte> fileNamePtr, FuseAllocateMode mode, long offset, long length, ref FuseFileInfo fileInfo)
+    {
+        if (mode != 0)
+        {
+            return PosixResult.ENOSYS;
+        }
+
+        if (fileInfo.Context is not Stream stream)
+        {
+            return PosixResult.EBADF;
+        }
+
+        var newLength = checked(offset + length);
+        if (newLength < stream.Length)
+        {
+            stream.SetLength(newLength);
+        }
 
         return PosixResult.Success;
     }

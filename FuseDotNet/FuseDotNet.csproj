@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="LTRData.Extensions.Native" Version="*" />
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="*" />
+    <PackageReference Include="System.Collections.Immutable" Version="*" />
     <PackageReference Include="System.Memory" Version="*" />
   </ItemGroup>
 

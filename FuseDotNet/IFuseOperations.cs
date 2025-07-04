@@ -40,6 +40,9 @@ public interface IFuseOperations : IDisposable
     PosixResult Rename(ReadOnlyNativeMemory<byte> from, ReadOnlyNativeMemory<byte> to);
     PosixResult Truncate(ReadOnlyNativeMemory<byte> fileNamePtr, long size);
     PosixResult UTime(ReadOnlyNativeMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo);
-    PosixResult Create(ReadOnlyNativeMemory<byte> fileNamePtr, PosixFileMode mode, ref FuseFileInfo fileInfo);
+    PosixResult Create(ReadOnlyNativeMemory<byte> fileNamePtr, int mode, ref FuseFileInfo fileInfo);
     PosixResult IoCtl(ReadOnlyNativeMemory<byte> fileNamePtr, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data);
+    PosixResult ChMod(NativeMemory<byte> fileNamePtr, PosixFileMode mode);
+    PosixResult ChOwn(NativeMemory<byte> fileNamePtr, int uid, int gid);
+    PosixResult FAllocate(NativeMemory<byte> fileNamePtr, FuseAllocateMode mode, long offset, long length, ref FuseFileInfo fileInfo);
 }

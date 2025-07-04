@@ -54,7 +54,7 @@ internal sealed class FuseOperations
 	public delegate nint fuse_f_init(ref FuseConnInfo fuse_conn_info);
 	public delegate void fuse_f_destroy(nint context);
 	public delegate int fuse_f_access(nint path, PosixAccessMode mask);
-	public delegate int fuse_f_create(nint path, PosixFileMode mode, ref FuseFileInfo fileInfo);
+	public delegate int fuse_f_create(nint path, int mode, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_lock(nint path, ref FuseFileInfo fileInfo, int cmd, nint flock);
 	public delegate int fuse_f_utimens(nint path, nint timespec, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_bmap(nint path, nint blocksize, out ulong idx);
@@ -63,7 +63,7 @@ internal sealed class FuseOperations
 	public delegate int fuse_f_write_buf(nint path, nint fuse_bufvec, long off, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_read_buf(nint path, nint ppbuf, nint size, long off, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_flock(nint path, ref FuseFileInfo fileInfo, int op);
-	public delegate int fuse_f_fallocate(nint path, PosixFileMode mode, long offset, long length, ref FuseFileInfo fileInfo);
+	public delegate int fuse_f_fallocate(nint path, FuseAllocateMode mode, long offset, long length, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_copy_file_range(nint path_in, ref FuseFileInfo fi_in, long offset_in, nint path_out, ref FuseFileInfo fi_out, long offset_out, nint size, int flags);
 	public delegate int fuse_f_lseek(nint path, long offset, int whence, ref FuseFileInfo fileInfo);
 	#endregion Delegates

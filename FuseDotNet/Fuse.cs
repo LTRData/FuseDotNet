@@ -79,8 +79,8 @@ public static class Fuse
             symlink = fuseOperationProxy.symlink,
             rename = fuseOperationProxy.rename,
             link = fuseOperationProxy.link,
-            chmod = null, // fuseOperationProxy.chmod,
-            chown = null, // fuseOperationProxy.chown,
+            chmod = fuseOperationProxy.chmod,
+            chown = fuseOperationProxy.chown,
             truncate = fuseOperationProxy.truncate,
             open = fuseOperationProxy.open,
             read = fuseOperationProxy.read,
@@ -109,7 +109,7 @@ public static class Fuse
             write_buf = null, // fuseOperationProxy.write_buf,
             read_buf = null, // fuseOperationProxy.read_buf,
             flock = null, // fuseOperationProxy.flock,
-            fallocate = null, // fuseOperationProxy.fallocate
+            fallocate = fuseOperationProxy.fallocate,
             copy_file_range = null, // fuseOperationProxy.copy_file_range
             lseek = null, // fuseOperationProxy.lseek
         };

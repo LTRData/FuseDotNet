@@ -1,4 +1,5 @@
 ﻿using FuseDotNet;
+using FuseDotNet.Logging;
 
 namespace MirrorFs;
 
@@ -14,7 +15,7 @@ public static class Program
             args = [.. args.Skip(1)];
 
             Console.WriteLine($"Starting fuse with arguments: '{string.Join("', '", args)}'");
-            operations.Mount(args);
+            operations.Mount(args, new ConsoleLogger());
 
             Console.WriteLine($"Fuse exit");
 

@@ -1,6 +1,4 @@
-﻿using FuseDotNet.Native;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 
 namespace FuseDotNet;
 
@@ -9,19 +7,14 @@ public class PosixException : Exception
     public PosixResult NativeErrorCode { get; }
 
     public PosixException(PosixResult errno)
-        : base(GetSystemErrorMessage(errno))
+        : base(errno.ToString())
     {
         NativeErrorCode = errno;
     }
 
     public PosixException(PosixResult errno, Exception? innerException)
-        : base(GetSystemErrorMessage(errno), innerException)
+        : base(errno.ToString(), innerException)
     {
         NativeErrorCode = errno;
     }
-
-    public static string GetSystemErrorMessage(PosixResult errno)
-        => systemMessages.GetOrAdd(errno, NativeMethods.strerror);
-
-    private static readonly ConcurrentDictionary<PosixResult, string> systemMessages = new();
 }
