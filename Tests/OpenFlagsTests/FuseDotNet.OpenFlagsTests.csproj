@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../FuseDotNet/FuseDotNet.csproj" />
+    <Compile Include="../../MirrorFs/MirrorFsOperations.cs" Link="MirrorFsOperations.cs" />
+    <Compile Include="../../MirrorFs/NativeMethods.cs" Link="NativeMethods.cs" />
+  </ItemGroup>
+</Project>
