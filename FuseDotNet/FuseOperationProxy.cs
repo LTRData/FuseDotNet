@@ -207,11 +207,30 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         }
     }
 
-    internal int rename(nint path, nint target)
+    internal int rename(nint path, nint target, FuseRenameFlags flags)
     {
         try
         {
-            var result = operations.Rename(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(target));
+            if (flags is not (FuseRenameFlags.None or FuseRenameFlags.NoReplace or FuseRenameFlags.Exchange))
+            {
+                return -PosixResult.EINVAL;
+            }
+
+            PosixResult result;
+
+            if (operations is IFuseRenameWithFlags renameOperations)
+            {
+                result = renameOperations.Rename(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(target), flags);
+            }
+            else if (flags == FuseRenameFlags.None)
+            {
+                result = operations.Rename(FuseHelper.SpanFromIntPtr(path), FuseHelper.SpanFromIntPtr(target));
+            }
+            else
+            {
+                return -PosixResult.EINVAL;
+            }
+
             return -result;
         }
         catch (Exception ex)
@@ -319,11 +338,24 @@ internal sealed class FuseOperationProxy(IFuseOperations operations, ILogger log
         }
     }
 
-    internal nint init(ref FuseConnInfo fuse_conn_info)
+    internal unsafe nint init(ref FuseConnInfo fuse_conn_info, nint config)
     {
         try
         {
-            operations.Init(ref fuse_conn_info);
+            if (operations is IFuseInitWithConfig initOperations)
+            {
+                if (config == 0)
+                {
+                    throw new ArgumentException("Missing FUSE configuration", nameof(config));
+                }
+
+                initOperations.Init(ref fuse_conn_info, ref *(FuseConfig*)config);
+            }
+            else
+            {
+                operations.Init(ref fuse_conn_info);
+            }
+
             return 0;
         }
         catch (Exception ex)

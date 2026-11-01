@@ -31,7 +31,7 @@ internal sealed class FuseOperations
 	public delegate int fuse_f_unlink(nint path);
 	public delegate int fuse_f_rmdir(nint path);
 	public delegate int fuse_f_symlink(nint path, nint target);
-	public delegate int fuse_f_rename(nint path, nint target);
+	public delegate int fuse_f_rename(nint path, nint target, FuseRenameFlags flags);
 	public delegate int fuse_f_link(nint path, nint target);
 	public delegate int fuse_f_chmod(nint path, PosixFileMode mode);
 	public delegate int fuse_f_chown(nint path, int uid, int gid);
@@ -51,7 +51,7 @@ internal sealed class FuseOperations
 	public delegate int fuse_f_readdir(nint path, nint buf, nint fuse_fill_dir_t, long offset, ref FuseFileInfo fileInfo, FuseReadDirFlags flags);
 	public delegate int fuse_f_releasedir(nint path, ref FuseFileInfo fileInfo);
 	public delegate int fuse_f_fsyncdir(nint path, int datasync, ref FuseFileInfo fileInfo);
-	public delegate nint fuse_f_init(ref FuseConnInfo fuse_conn_info);
+	public delegate nint fuse_f_init(ref FuseConnInfo fuse_conn_info, nint config);
 	public delegate void fuse_f_destroy(nint context);
 	public delegate int fuse_f_access(nint path, PosixAccessMode mask);
 	public delegate int fuse_f_create(nint path, int mode, ref FuseFileInfo fileInfo);
