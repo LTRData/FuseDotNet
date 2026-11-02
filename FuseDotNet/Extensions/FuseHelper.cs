@@ -75,25 +75,30 @@ public static class FuseHelper
         }
     }
 
+    /// <summary>
+    /// Maps creation and truncation flags to a FileMode. Append is a write-time
+    /// behavior and must be handled separately; FileMode.Append is not equivalent
+    /// to O_APPEND (it creates missing files and disallows read/write access).
+    /// </summary>
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("freebsd")]
+#endif
     public static FileMode ToFileMode(this PosixOpenFlags flags)
     {
         FileMode mode;
 
-        if (flags.HasFlag(PosixOpenFlags.CreateNew))
+        if (flags.HasFlag(PosixOpenFlags.Create | PosixOpenFlags.CreateNew))
         {
             mode = FileMode.CreateNew;
         }
         else if (flags.HasFlag(PosixOpenFlags.Create))
         {
-            mode = FileMode.Create;
+            mode = flags.HasFlag(PosixOpenFlags.Truncate) ? FileMode.Create : FileMode.OpenOrCreate;
         }
         else if (flags.HasFlag(PosixOpenFlags.Truncate))
         {
             mode = FileMode.Truncate;
-        }
-        else if (flags.HasFlag(PosixOpenFlags.Append))
-        {
-            mode = FileMode.Append;
         }
         else
         {
@@ -103,16 +108,32 @@ public static class FuseHelper
         return mode;
     }
 
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("freebsd")]
+#endif
     public static FileAccess ToFileAccess(this PosixOpenFlags flags)
         => (flags & PosixOpenFlags.AccessModes) switch
         {
-            PosixOpenFlags.Write => FileAccess.Write,
-            PosixOpenFlags.ReadWrite => FileAccess.ReadWrite,
+            var mode when mode == PosixOpenFlags.Write => FileAccess.Write,
+            var mode when mode == PosixOpenFlags.ReadWrite => FileAccess.ReadWrite,
             _ => FileAccess.Read
         };
 
+#if NET5_0_OR_GREATER
+    [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("freebsd")]
+#endif
     public static FileShare ToFileShare(this PosixOpenFlags flags)
     {
+#if NETCOREAPP
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+#endif
+        {
+            return FileShare.ReadWrite | FileShare.Delete;
+        }
+
+#if NETCOREAPP
         if (flags.HasFlag(PosixOpenFlags.SharedLock))
         {
             return FileShare.Read | FileShare.Delete;
@@ -125,6 +146,7 @@ public static class FuseHelper
         {
             return FileShare.ReadWrite | FileShare.Delete;
         }
+#endif
     }
 
 #if NET5_0_OR_GREATER

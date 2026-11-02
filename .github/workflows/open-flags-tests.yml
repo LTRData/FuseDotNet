@@ -1,0 +1,36 @@
+name: Native open flags and MirrorFs tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    paths:
+      - 'FuseDotNet/**'
+      - 'MirrorFs/**'
+      - 'Tests/OpenFlagsTests/**'
+      - 'Directory.Build.props'
+      - '.github/workflows/open-flags-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-dotnet@v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+      - run: sudo apt-get update && sudo apt-get install -y libfuse3-dev pkg-config
+      - name: Build all library target frameworks
+        run: dotnet build FuseDotNet/FuseDotNet.csproj -c Release -p:GeneratePackageOnBuild=false -m:1
+      - name: Build MirrorFs
+        run: dotnet build MirrorFs/MirrorFs.csproj -c Debug
+      - name: Run native and managed regression checks
+        run: sh Tests/OpenFlagsTests/run.sh

@@ -1,6 +1,7 @@
 ﻿using FuseDotNet;
 using FuseDotNet.Extensions;
 using LTRData.Extensions.Native.Memory;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 namespace MirrorFs;
@@ -12,6 +13,8 @@ namespace MirrorFs;
 internal class MirrorFsOperations(string basePath) : IFuseOperations
 {
     public string BasePath { get; } = basePath;
+
+    private bool writebackCache;
 
     public string GetPath(ReadOnlyNativeMemory<byte> fileNamePtr)
         => Path.Join(BasePath, FuseHelper.GetString(fileNamePtr));
@@ -80,7 +83,8 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
         }
     }
 
-    public void Init(ref FuseConnInfo fuse_conn_info) { }
+    public void Init(ref FuseConnInfo fuse_conn_info)
+        => writebackCache = fuse_conn_info.want.HasFlag(FuseCapabilities.WritebackCache);
     
     public PosixResult IoCtl(ReadOnlyNativeMemory<byte> readOnlySpan, int cmd, nint arg, ref FuseFileInfo fileInfo, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
     
@@ -90,10 +94,27 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
 
     public PosixResult Open(ReadOnlyNativeMemory<byte> fileNamePtr, ref FuseFileInfo fileInfo)
     {
-        fileInfo.Context = File.Open(GetPath(fileNamePtr),
-                                     fileInfo.flags.ToFileMode(),
-                                     fileInfo.flags.ToFileAccess(),
-                                     fileInfo.flags.ToFileShare());
+        var path = GetPath(fileNamePtr);
+        var access = fileInfo.flags.ToFileAccess();
+
+        if (!writebackCache && fileInfo.flags.HasFlag(PosixOpenFlags.Append))
+        {
+            fileInfo.Context = NativeMethods.OpenAppend(path, fileInfo.flags);
+        }
+        else
+        {
+            // With writeback caching the kernel supplies append offsets and may
+            // issue reads even for handles originally opened write-only.
+            if (writebackCache && access == FileAccess.Write)
+            {
+                access = FileAccess.ReadWrite;
+            }
+
+            fileInfo.Context = File.Open(path,
+                                        fileInfo.flags.ToFileMode(),
+                                        access,
+                                        fileInfo.flags.ToFileShare());
+        }
 
         return PosixResult.Success;
     }
@@ -118,8 +139,11 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
             return PosixResult.EBADF;
         }
 
-        stream.Position = position;
-        readLength = stream.Read(buffer.Span);
+        lock (stream)
+        {
+            stream.Position = position;
+            readLength = stream.Read(buffer.Span);
+        }
 
         return PosixResult.Success;
     }
@@ -148,7 +172,14 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
             return PosixResult.Success;
         }
 
-        stream.Close();
+        try
+        {
+            stream.Close();
+        }
+        finally
+        {
+            fileInfo.Context = null;
+        }
 
         return PosixResult.Success;
     }
@@ -207,7 +238,7 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
         return PosixResult.Success;
     }
 
-    public PosixResult Write(ReadOnlyNativeMemory<byte> fileNamePtr, ReadOnlyNativeMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
+    public unsafe PosixResult Write(ReadOnlyNativeMemory<byte> fileNamePtr, ReadOnlyNativeMemory<byte> buffer, long position, out int writtenLength, ref FuseFileInfo fileInfo)
     {
         if (fileInfo.Context is not Stream stream)
         {
@@ -215,9 +246,30 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
             return PosixResult.EBADF;
         }
 
-        stream.Position = position;
-        stream.Write(buffer.Span);
-        writtenLength = buffer.Length;
+        lock (stream)
+        {
+            if (!writebackCache && fileInfo.flags.HasFlag(PosixOpenFlags.Append) && stream is FileStream fileStream)
+            {
+                fixed (byte* ptr = buffer.Span)
+                {
+                    var result = NativeMethods.write(fileStream.SafeFileHandle, ptr, (nuint)buffer.Length);
+
+                    if (result < 0)
+                    {
+                        writtenLength = 0;
+                        return Marshal.GetLastWin32Error();
+                    }
+
+                    writtenLength = (int)result;
+                }
+            }
+            else
+            {
+                stream.Position = position;
+                stream.Write(buffer.Span);
+                writtenLength = buffer.Length;
+            }
+        }
 
         return PosixResult.Success;
     }
