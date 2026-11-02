@@ -53,6 +53,12 @@ Arguments follow the native FUSE command line, including a program name as the f
 
 Keep the operations object and its backing resources alive until the mount call returns after unmounting. Callbacks return `PosixResult` values; the wrapper translates these to native FUSE results. The wrapper does not expose every FUSE 3 operation: extended attributes, file locking and several other callbacks are currently left unset in [Fuse.Mount](https://github.com/LTRData/FuseDotNet/blob/master/FuseDotNet/Fuse.cs).
 
+## Rename flags and initialization configuration
+
+Filesystems can optionally implement `IFuseRenameWithFlags` and/or `IFuseInitWithConfig` in addition to `IFuseOperations`. The proxy calls the optional method instead of the corresponding legacy method, including for an ordinary rename with no flags. Without `IFuseRenameWithFlags`, a rename with nonzero flags returns `EINVAL` without calling the legacy implementation. Unknown flags and the invalid combination of `NoReplace | Exchange` also return `EINVAL`.
+
+`NoReplace` must preserve an existing destination and `Exchange` must atomically swap two existing entries. A filesystem must return an error if it cannot implement the requested semantics. `IFuseInitWithConfig.Init` receives libfuse's initialized configuration by reference; modify only the required fields and do not retain the reference. `FuseConfig` exposes the stable prefix through `auto_cache`, leaving later, version-dependent fields untouched. Enabling `hard_remove` opts out of libfuse's hidden-file handling and requires the filesystem to support open-but-unlinked files; it is not enabled by the wrapper.
+
 ## Service lifecycle and unmounting
 
 [FuseService](https://github.com/LTRData/FuseDotNet/blob/master/FuseDotNet/FuseService.cs) hosts an operations instance on a long-running task. Pass foreground arguments with the mount point last.
