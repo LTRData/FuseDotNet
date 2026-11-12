@@ -24,14 +24,14 @@ For DiscUtils file systems, use the separate [LTRData.DiscUtils.MountFuse](https
 
 ## Frameworks and native requirements
 
-The library targets `net10.0`, `net9.0`, `net8.0`, `netstandard2.1`, `netstandard2.0` and `net48`. The .NET Standard and .NET Framework builds provide compatibility options for older runtimes, including Mono.
+The library targets `net11.0`, `net10.0`, `net9.0`, `net8.0`, `netstandard2.1`, `netstandard2.0` and `net48`. The .NET Standard and .NET Framework builds provide compatibility options for older runtimes, including Mono.
 
 The current native platform mappings are:
 
 | Operating system | Architectures | Notes |
 | --- | --- | --- |
 | Linux | x86, x64, ARM32, ARM64 | Requires a compatible runtime and native FUSE 3 installation. |
-| FreeBSD | x64 | Use a `net8.0`, `net9.0` or `net10.0` build; FreeBSD stat marshalling and unmount handling are excluded from the .NET Standard and .NET Framework builds. |
+| FreeBSD | x64 | Use a `net8.0`, `net9.0`, `net10.0` or `net11.0` build; FreeBSD stat marshalling and unmount handling are excluded from the .NET Standard and .NET Framework builds. |
 
 Install FUSE 3 separately and ensure the native library can be resolved as `fuse3`. The host also needs kernel FUSE support and appropriate device and mount-point permissions. Framework compatibility alone does not add Windows or macOS support.
 
@@ -84,7 +84,7 @@ umount /path/to/mountpoint
 
 ## Building and running samples
 
-Use the .NET 10 SDK for the current source tree. For a single-target library build:
+Use the .NET 11 SDK for the current source tree. For a single-target library build:
 
 ```sh
 dotnet build FuseDotNet/FuseDotNet.csproj -c Debug -f net10.0
@@ -92,19 +92,69 @@ dotnet build FuseDotNet/FuseDotNet.csproj -c Debug -f net10.0
 
 The library's Release configuration also generates a NuGet package. A full build targets all configured frameworks.
 
-The samples currently target `net8.0` and `net9.0`, as well as `netstandard2.1`; choose a runnable .NET target with a matching installed runtime. From the repository root, with an existing empty mount directory:
+The samples currently target `net10.0` and `net11.0`, as well as `netstandard2.1`; choose a runnable .NET target with a matching installed runtime. From the repository root, with an existing empty mount directory:
 
 ```sh
-dotnet run --project TempFs/TempFs.csproj -f net8.0 -- -f -s /path/to/mountpoint
+dotnet run --project TempFs/TempFs.csproj -f net11.0 -- -f -s /path/to/mountpoint
 ```
 
 For the mirror sample, supply the source directory before the FUSE options and use a separate mount directory:
 
 ```sh
-dotnet run --project MirrorFs/MirrorFs.csproj -f net8.0 -- /path/to/source -f -s /path/to/mountpoint
+dotnet run --project MirrorFs/MirrorFs.csproj -f net11.0 -- /path/to/source -f -s /path/to/mountpoint
 ```
 
 These are illustrative implementations with incomplete file-system semantics; review their callbacks before adapting them.
+
+## Continuous integration and NuGet publishing
+
+The native FUSE callback tests and MirrorFs open-flag tests run on Linux x64
+and ARM64 using both .NET 10 and .NET 11. The tests compile native FUSE 3 test
+libraries and require the `libfuse3-dev` package. Run either test suite
+locally with `TEST_TARGET_FRAMEWORK=net10.0` (default) or
+`TEST_TARGET_FRAMEWORK=net11.0`, for example:
+
+```sh
+TEST_TARGET_FRAMEWORK=net11.0 sh Tests/CallbackTests/run.sh
+TEST_TARGET_FRAMEWORK=net11.0 sh Tests/OpenFlagsTests/run.sh
+```
+
+NuGet publishing is a separate, tag-triggered operation. After merging
+changes to `master`, create an annotated publication tag:
+
+```sh
+git switch master
+git pull --ff-only
+git tag -a publish/2026.11.12.1 -m "NuGet publication 2026.11.12.1"
+git push origin publish/2026.11.12.1
+```
+
+The [publishing workflow](.github/workflows/publish-nuget.yml) accepts only
+`publish/*` tags whose commit is reachable from `master`. It checks all
+library targets, builds samples and exercises .NET 10/11 native regression
+checks on Linux x64 and ARM64 before packaging `LTRData.FuseDotNet`.
+
+**A publication tag does not determine the NuGet package version.** The
+`Version` and `PackageVersion` in `Directory.Build.props` remain the
+authority. Release builds generate `.nupkg` and `.snupkg` files, and the
+publishing workflow uploads those files without changing their versions.
+Previously published versions are skipped; increase `Version` when a new
+package version is required.
+
+The first publication requires these one-time settings:
+
+- Configure the NuGet.org Trusted Publishing policy for `LTRData/FuseDotNet`
+  with GitHub workflow filename `publish-nuget.yml`, and environment
+  `nuget-publish` if the policy specifies an environment.
+- Set the GitHub Actions repository variable `NUGET_USER` to the NuGet.org
+  account username associated with the policy, not the GitHub organization name.
+- Create the `nuget-publish` GitHub Actions environment, optionally requiring
+  approval and restricting deployments to `publish/*` tags.
+
+The build-and-test jobs have no NuGet publishing credentials. Only the final
+environment-protected job obtains a temporary credential via Trusted
+Publishing, after the package artifact is built and verified. No long-lived
+NuGet API key is stored in GitHub.
 
 ## License
 
