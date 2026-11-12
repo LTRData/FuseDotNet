@@ -1,0 +1,165 @@
+name: Publish NuGet (tag)
+
+on:
+  push:
+    tags:
+      - 'publish/*'
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  verify:
+    name: Verify release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Require publication tag on master
+        shell: bash
+        run: |
+          git fetch --no-tags origin master:refs/remotes/origin/master
+          git merge-base --is-ancestor HEAD origin/master ||
+            { echo 'The publication tag must point to a commit reachable from master.'; exit 1; }
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6.0.0
+        with:
+          dotnet-version: |
+            10.0.x
+            11.0.x
+
+      - name: Install native FUSE dependencies
+        run: sudo apt-get update && sudo apt-get install -y libfuse3-dev pkg-config
+
+      - name: Build all library targets
+        run: dotnet build FuseDotNet/FuseDotNet.csproj -c Release -p:GeneratePackageOnBuild=false -m:1
+
+      - name: Build sample applications
+        run: |
+          dotnet build MirrorFs/MirrorFs.csproj -c Debug -m:1
+          dotnet build TempFs/TempFs.csproj -c Debug -m:1
+
+      - name: Run callback and open flags regression tests (.NET 10 and 11)
+        run: |
+          TEST_TARGET_FRAMEWORK=net10.0 sh Tests/CallbackTests/run.sh
+          TEST_TARGET_FRAMEWORK=net11.0 sh Tests/CallbackTests/run.sh
+          TEST_TARGET_FRAMEWORK=net10.0 sh Tests/OpenFlagsTests/run.sh
+          TEST_TARGET_FRAMEWORK=net11.0 sh Tests/OpenFlagsTests/run.sh
+
+  pack:
+    name: Build release package
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6.0.0
+        with:
+          dotnet-version: |
+            10.0.x
+            11.0.x
+
+      - name: Build and pack the library
+        shell: bash
+        run: |
+          mkdir -p artifacts/nuget
+          dotnet restore FuseDotNet/FuseDotNet.csproj
+          dotnet build FuseDotNet/FuseDotNet.csproj -c Release --no-restore \
+            "-p:LocalNuGetPath=$GITHUB_WORKSPACE/artifacts/nuget"
+
+          shopt -s nullglob
+          packages=(artifacts/nuget/*.nupkg)
+          symbols=(artifacts/nuget/*.snupkg)
+          if (( ${#packages[@]} != 1 || ${#symbols[@]} != 1 )); then
+            echo "Expected exactly one package and one symbols package."
+            exit 1
+          fi
+
+          package="${packages[0]##*/}"
+          if [[ ! "$package" =~ ^LTRData\.FuseDotNet\.[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?\.nupkg$ ]]; then
+            echo "Unexpected package: $package"
+            exit 1
+          fi
+          symbol="${package%.nupkg}.snupkg"
+          if [[ "${symbols[0]##*/}" != "$symbol" ]]; then
+            echo "Symbol package does not match $package"
+            exit 1
+          fi
+          echo "Ready to publish: $package and $symbol"
+
+      - name: Upload built packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: |
+            artifacts/nuget/*.nupkg
+            artifacts/nuget/*.snupkg
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish to NuGet.org
+    needs: pack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: nuget-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-dotnet@v6.0.0
+        with:
+          dotnet-version: '11.0.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/nuget
+
+      - name: Verify publishing configuration
+        shell: bash
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER }}
+        run: |
+          if [[ -z "$NUGET_USER" ]]; then
+            echo 'Set the NUGET_USER GitHub Actions repository variable.'
+            exit 1
+          fi
+          shopt -s nullglob
+          packages=(artifacts/nuget/*.nupkg)
+          if (( ${#packages[@]} != 1 )); then
+            echo 'Expected exactly one NuGet package.'
+            exit 1
+          fi
+
+      - name: NuGet login (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Publish library and symbol package
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push artifacts/nuget/*.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key "$NUGET_API_KEY" \
+            --skip-duplicate
