@@ -25,9 +25,13 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-dotnet@v6.0.0
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: |
+            10.0.x
+            11.0.x
       - run: sudo apt-get update && sudo apt-get install -y libfuse3-dev pkg-config
       - name: Build all library target frameworks
         run: dotnet build FuseDotNet/FuseDotNet.csproj -c Release -p:GeneratePackageOnBuild=false -m:1
       - name: Run native and managed regression checks
-        run: sh Tests/CallbackTests/run.sh
+        run: |
+          TEST_TARGET_FRAMEWORK=net10.0 sh Tests/CallbackTests/run.sh
+          TEST_TARGET_FRAMEWORK=net11.0 sh Tests/CallbackTests/run.sh

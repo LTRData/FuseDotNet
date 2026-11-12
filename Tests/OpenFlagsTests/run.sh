@@ -8,6 +8,7 @@ trap 'rm -rf "$native_dir"' EXIT HUP INT TERM
 cc -Wall -Wextra -Werror -D_FILE_OFFSET_BITS=64 -fPIC -shared \
     ${FUSE_CFLAGS:-$(pkg-config --cflags fuse3)} \
     Tests/OpenFlagsTests/native.c -o "$native_dir/libopen_flags_tests.so"
+target_framework=${TEST_TARGET_FRAMEWORK:-net10.0}
 LD_LIBRARY_PATH="$native_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
     "${DOTNET:-dotnet}" run --project Tests/OpenFlagsTests/FuseDotNet.OpenFlagsTests.csproj \
-    -c Debug -f net10.0 -p:TargetFrameworks=net10.0
+    -c Debug -f "$target_framework" -p:TargetFrameworks="$target_framework"
