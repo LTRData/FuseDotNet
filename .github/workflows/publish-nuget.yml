@@ -1,6 +1,14 @@
 name: Publish NuGet (tag)
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/publish-nuget.yml'
+      - 'Directory.Build.props'
+      - 'FuseDotNet/**'
+      - 'MirrorFs/**'
+      - 'TempFs/**'
+      - 'Tests/**'
   push:
     tags:
       - 'publish/*'
@@ -27,6 +35,7 @@ jobs:
           fetch-depth: 0
 
       - name: Require publication tag on master
+        if: github.event_name == 'push'
         shell: bash
         run: |
           git fetch --no-tags origin master:refs/remotes/origin/master
@@ -115,6 +124,7 @@ jobs:
 
   publish:
     name: Publish to NuGet.org
+    if: github.event_name == 'push'
     needs: pack
     runs-on: ubuntu-24.04
     timeout-minutes: 20
