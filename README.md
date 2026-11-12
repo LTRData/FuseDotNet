@@ -151,10 +151,12 @@ The first publication requires these one-time settings:
 - Create the `nuget-publish` GitHub Actions environment, optionally requiring
   approval and restricting deployments to `publish/*` tags.
 
-The build-and-test jobs have no NuGet publishing credentials. Only the final
-environment-protected job obtains a temporary credential via Trusted
-Publishing, after the package artifact is built and verified. No long-lived
-NuGet API key is stored in GitHub.
+Pull requests also run the release verification and packaging stages, but
+**never** execute the publishing job; this checks generated artifacts before
+publication. The build-and-test jobs have no NuGet publishing credentials.
+Only the final environment-protected job obtains a temporary credential via
+Trusted Publishing after the package artifact is built and verified. No
+long-lived NuGet API key is stored in GitHub.
 
 ## License
 
