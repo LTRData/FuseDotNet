@@ -3,6 +3,9 @@
 ###############################################################################
 * text=auto
 
+# Shell scripts require LF line endings, including in Windows checkouts.
+*.sh text eol=lf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
