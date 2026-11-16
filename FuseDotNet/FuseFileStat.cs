@@ -387,12 +387,18 @@ public struct LinuxArm32FileStat
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct TimeSpec(long msec) : IEquatable<TimeSpec>, IComparable<TimeSpec>
 {
+    // Linux and FreeBSD use different UTIME_NOW/UTIME_OMIT sentinel values.
+    private static readonly nint utimeNow = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? (1 << 30) - 1 : -1;
+    private static readonly nint utimeOmit = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? (1 << 30) - 2 : -2;
+
     public readonly nint tv_sec = (nint)(msec / 1000);       /* seconds */
     public readonly nint tv_nsec = (nint)(msec % 1000 * 1000000);        /* and nanoseconds */
 
-    public bool IsOmit => tv_nsec == -2;
+    /// <summary>Whether this timestamp requests leaving the existing time unchanged.</summary>
+    public bool IsOmit => tv_nsec == utimeOmit;
 
-    public bool IsPseudoNow => tv_nsec == -1;
+    /// <summary>Whether this timestamp requests the current time, ignoring tv_sec.</summary>
+    public bool IsPseudoNow => tv_nsec == utimeNow;
 
     public long total_msec => (long)tv_sec * 1000 + tv_nsec / 1000000;
 
@@ -413,6 +419,10 @@ public readonly struct TimeSpec(long msec) : IEquatable<TimeSpec>, IComparable<T
 #endif
     public static TimeSpec Now() => NativeMethods.time(out _);
 
+    /// <summary>
+    /// Converts a timestamp, resolving UTIME_NOW to the current UTC time.
+    /// Check <see cref="IsOmit"/> first: UTIME_OMIT requests no update and is not a date.
+    /// </summary>
     public DateTimeOffset ToDateTime() => IsPseudoNow ? DateTimeOffset.UtcNow : DateTimeOffset.FromUnixTimeMilliseconds(total_msec);
 
     public override string ToString() => ToDateTime().ToString();

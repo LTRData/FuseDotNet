@@ -22,6 +22,7 @@ internal static class Program
             CheckMirror(root);
             CheckConcurrentAppend(root);
             CheckWriteback(root);
+            CheckTimestamps(root);
         }
         finally
         {
@@ -192,6 +193,60 @@ internal static class Program
         Equal("abXdef", File.ReadAllText(path), "writeback respects supplied offset instead of appending again");
     }
 
+    private static void CheckTimestamps(string root)
+    {
+        using var operations = new MirrorFsOperations(root);
+        var path = Path.Combine(root, "timestamps");
+        File.WriteAllText(path, "seed");
+        var initialAtime = new DateTime(2001, 2, 3, 4, 5, 6, DateTimeKind.Utc);
+        var initialMtime = new DateTime(2002, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+        var explicitAtime = new DateTime(2003, 4, 5, 6, 7, 8, 123, DateTimeKind.Utc);
+        var explicitMtime = new DateTime(2004, 5, 6, 7, 8, 9, 456, DateTimeKind.Utc);
+        Native.make_utime_now(out var now);
+        Native.make_utime_omit(out var omit);
+        TimeSpec[] atimes = [omit, now, new(explicitAtime)];
+        TimeSpec[] mtimes = [omit, now, new(explicitMtime)];
+        var ptr = Marshal.StringToCoTaskMemUTF8("/timestamps");
+        try
+        {
+            var info = new FuseFileInfo();
+            for (var i = 0; i < atimes.Length; i++)
+            {
+                for (var j = 0; j < mtimes.Length; j++)
+                {
+                    File.SetLastAccessTimeUtc(path, initialAtime);
+                    File.SetLastWriteTimeUtc(path, initialMtime);
+                    var previousAtime = File.GetLastAccessTimeUtc(path);
+                    var previousMtime = File.GetLastWriteTimeUtc(path);
+                    var before = DateTime.UtcNow.AddMilliseconds(-1);
+                    Equal(0, (int)operations.UTime(FuseHelper.SpanFromIntPtr(ptr), atimes[i], mtimes[j], ref info), "timestamp update result");
+                    var after = DateTime.UtcNow;
+                    var actualAtime = File.GetLastAccessTimeUtc(path);
+                    var actualMtime = File.GetLastWriteTimeUtc(path);
+                    CheckFileTime(i, actualAtime, previousAtime, explicitAtime, before, after);
+                    CheckFileTime(j, actualMtime, previousMtime, explicitMtime, before, after);
+                    if (i == 1 && j == 1)
+                    {
+                        Equal(actualAtime, actualMtime, "both UTIME_NOW timestamps use the same current time");
+                    }
+                }
+            }
+        }
+        finally { Marshal.FreeCoTaskMem(ptr); }
+    }
+
+    private static void CheckFileTime(int mode, DateTime actual, DateTime previous, DateTime explicitTime, DateTime before, DateTime after)
+    {
+        if (mode == 1)
+        {
+            Equal(true, actual >= before && actual <= after, "UTIME_NOW updates the backing timestamp to now");
+        }
+        else
+        {
+            Equal(mode == 0 ? previous : explicitTime, actual, "omitted timestamps preserved and explicit timestamps applied");
+        }
+    }
+
     private static FuseFileInfo Open(MirrorFsOperations operations, string path, PosixOpenFlags flags, bool create = false)
     {
         var ptr = Marshal.StringToCoTaskMemUTF8(path);
@@ -262,5 +317,9 @@ internal static class Program
         internal static extern nuint flags_size();
         [DllImport("open_flags_tests", CallingConvention = CallingConvention.Cdecl)]
         internal static extern nuint file_info_offset(uint index);
+        [DllImport("open_flags_tests", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void make_utime_now(out TimeSpec value);
+        [DllImport("open_flags_tests", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void make_utime_omit(out TimeSpec value);
     }
 }

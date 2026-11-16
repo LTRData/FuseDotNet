@@ -1,6 +1,7 @@
 #define FUSE_USE_VERSION 31
 #include <fuse.h>
 #include <stddef.h>
+#include <sys/stat.h>
 
 size_t config_size(void) { return sizeof(struct fuse_config); }
 size_t config_prefix_size(void)
@@ -30,4 +31,24 @@ void *invoke_init(void *(*callback)(struct fuse_conn_info *, struct fuse_config 
                   struct fuse_conn_info *conn, struct fuse_config *config)
 {
     return callback(conn, config);
+}
+
+long utime_now(void) { return UTIME_NOW; }
+long utime_omit(void) { return UTIME_OMIT; }
+size_t timespec_size(void) { return sizeof(struct timespec); }
+size_t timespec_offset(unsigned int index)
+{
+    const size_t offsets[] = { offsetof(struct timespec, tv_sec), offsetof(struct timespec, tv_nsec) };
+    return index < sizeof(offsets) / sizeof(offsets[0]) ? offsets[index] : (size_t)-1;
+}
+
+int invoke_utimens(int (*callback)(const char *, const struct timespec[2], struct fuse_file_info *),
+                   long atime_sec, long atime_nsec, long mtime_sec, long mtime_nsec,
+                   struct fuse_file_info *info)
+{
+    const struct timespec times[2] = {
+        { .tv_sec = atime_sec, .tv_nsec = atime_nsec },
+        { .tv_sec = mtime_sec, .tv_nsec = mtime_nsec }
+    };
+    return callback("/file", times, info);
 }
