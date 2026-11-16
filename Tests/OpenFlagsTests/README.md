@@ -13,3 +13,5 @@ MirrorFs checks use disposable backing files and its real callbacks. They cover 
 Timestamp checks use native `UTIME_NOW` and `UTIME_OMIT` values and exercise every combination of current, omitted and explicit access/modification times. They verify that omitted timestamps remain unchanged and that a request setting both timestamps to now uses one current-time value.
 
 No mount or root privileges are required. The script also works on FreeBSD with a compatible .NET 10 installation and libfuse headers. `DOTNET` may specify the SDK executable, and `FUSE_CFLAGS` may select a different header installation. These checks do not perform a live kernel FUSE mount.
+
+Native helper libraries are built in temporary subdirectories of `Tests/Debug` and removed when the script exits. This avoids loading executable code from `/tmp` on systems where that filesystem is mounted with `noexec`.
