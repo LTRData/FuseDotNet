@@ -233,8 +233,18 @@ internal class MirrorFsOperations(string basePath) : IFuseOperations
     public PosixResult UTime(ReadOnlyNativeMemory<byte> fileNamePtr, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo fileInfo)
     {
         var path = GetPath(fileNamePtr);
-        File.SetLastAccessTimeUtc(path, atime.ToDateTime().UtcDateTime);
-        File.SetLastWriteTimeUtc(path, mtime.ToDateTime().UtcDateTime);
+        var now = DateTime.UtcNow;
+
+        if (!atime.IsOmit)
+        {
+            File.SetLastAccessTimeUtc(path, atime.IsPseudoNow ? now : atime.ToDateTime().UtcDateTime);
+        }
+
+        if (!mtime.IsOmit)
+        {
+            File.SetLastWriteTimeUtc(path, mtime.IsPseudoNow ? now : mtime.ToDateTime().UtcDateTime);
+        }
+
         return PosixResult.Success;
     }
 

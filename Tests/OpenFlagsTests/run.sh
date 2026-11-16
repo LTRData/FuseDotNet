@@ -1,7 +1,9 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/../.."
-native_dir=$(mktemp -d)
+# Keep loadable native helpers beside the test outputs, since /tmp may be noexec.
+mkdir -p "$PWD/Tests/Debug"
+native_dir=$(mktemp -d "$PWD/Tests/Debug/native.XXXXXX")
 trap 'rm -rf "$native_dir"' EXIT HUP INT TERM
 
 # FUSE_CFLAGS can select headers from a non-system libfuse installation.

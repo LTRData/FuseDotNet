@@ -3,6 +3,7 @@
 #include <fuse.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include <sys/stat.h>
 
 int open_flag_value(unsigned int index)
 {
@@ -26,4 +27,16 @@ size_t file_info_offset(unsigned int index)
     const size_t offsets[] = { offsetof(struct fuse_file_info, flags), offsetof(struct fuse_file_info, fh),
         offsetof(struct fuse_file_info, lock_owner), offsetof(struct fuse_file_info, poll_events) };
     return index < sizeof(offsets) / sizeof(offsets[0]) ? offsets[index] : (size_t)-1;
+}
+
+void make_utime_now(struct timespec *value)
+{
+    value->tv_sec = 123456789;
+    value->tv_nsec = UTIME_NOW;
+}
+
+void make_utime_omit(struct timespec *value)
+{
+    value->tv_sec = -123456789;
+    value->tv_nsec = UTIME_OMIT;
 }

@@ -59,7 +59,60 @@ internal static class Program
 
         CheckInit(new TestOperations(), extended: false);
         CheckInit(new ExtendedOperations(), extended: true);
+        CheckUTime();
         Console.WriteLine($"PASS: {assertions} callback and native-layout assertions");
+    }
+
+    private static void CheckUTime()
+    {
+        Equal(Native.timespec_size(), (nuint)Marshal.SizeOf<TimeSpec>(), "native timespec size");
+        Equal(Native.timespec_offset(0), (nuint)Marshal.OffsetOf<TimeSpec>(nameof(TimeSpec.tv_sec)), "tv_sec offset");
+        Equal(Native.timespec_offset(1), (nuint)Marshal.OffsetOf<TimeSpec>(nameof(TimeSpec.tv_nsec)), "tv_nsec offset");
+
+        var now = Native.utime_now();
+        var omit = Native.utime_omit();
+        nint[] nanoseconds = [now, omit, 123456789];
+        var operations = new TestOperations();
+        var proxy = new FuseOperationProxy(operations, new NullLogger());
+        var info = new FuseFileInfo();
+        var calls = 0;
+
+        // tv_sec has no meaning for UTIME_NOW/UTIME_OMIT, even outside DateTime's range.
+        foreach (var ignoredSeconds in new nint[] { 0, nint.MinValue, nint.MaxValue })
+        {
+            foreach (var atimeNsec in nanoseconds)
+            {
+                foreach (var mtimeNsec in nanoseconds)
+                {
+                    var atimeSec = atimeNsec == now || atimeNsec == omit ? ignoredSeconds : 1700000000;
+                    var mtimeSec = mtimeNsec == now || mtimeNsec == omit ? ignoredSeconds : 1700000100;
+                    Equal(0, Native.invoke_utimens(proxy.utimens, atimeSec, atimeNsec, mtimeSec, mtimeNsec, ref info), "utimens result");
+                    Equal(++calls, operations.UTimeCalls, "utimens dispatched exactly once");
+                    Equal("/file", operations.LastUTimePath, "utimens path");
+                    CheckTimeSpec(operations.LastAtime, atimeSec, atimeNsec, now, omit);
+                    CheckTimeSpec(operations.LastMtime, mtimeSec, mtimeNsec, now, omit);
+                }
+            }
+        }
+    }
+
+    private static void CheckTimeSpec(TimeSpec actual, nint seconds, nint nanoseconds, nint now, nint omit)
+    {
+        Equal(seconds, actual.tv_sec, "native seconds preserved");
+        Equal(nanoseconds, actual.tv_nsec, "native nanoseconds preserved");
+        Equal(nanoseconds == now, actual.IsPseudoNow, "native UTIME_NOW recognized");
+        Equal(nanoseconds == omit, actual.IsOmit, "native UTIME_OMIT recognized");
+        if (nanoseconds == now)
+        {
+            var before = DateTimeOffset.UtcNow;
+            var converted = actual.ToDateTime();
+            Equal(true, converted >= before && converted <= DateTimeOffset.UtcNow, "UTIME_NOW ignores seconds and resolves to now");
+        }
+        else if (nanoseconds != omit)
+        {
+            var expected = DateTimeOffset.FromUnixTimeMilliseconds((long)seconds * 1000 + (long)nanoseconds / 1000000);
+            Equal(expected, actual.ToDateTime(), "explicit timestamp keeps millisecond conversion");
+        }
     }
 
     private static unsafe void CheckInit(TestOperations operations, bool extended)
@@ -114,6 +167,16 @@ internal static class Program
         internal static extern int invoke_rename(FuseOperations.fuse_f_rename callback, uint flags);
         [DllImport("callback_tests", CallingConvention = CallingConvention.Cdecl)]
         internal static extern nint invoke_init(FuseOperations.fuse_f_init callback, ref FuseConnInfo conn, nint config);
+        [DllImport("callback_tests", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern nint utime_now();
+        [DllImport("callback_tests", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern nint utime_omit();
+        [DllImport("callback_tests", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern nuint timespec_size();
+        [DllImport("callback_tests", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern nuint timespec_offset(uint index);
+        [DllImport("callback_tests", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int invoke_utimens(FuseOperations.fuse_f_utimens callback, nint atimeSec, nint atimeNsec, nint mtimeSec, nint mtimeNsec, ref FuseFileInfo info);
     }
 
     private sealed class ExtendedOperations : TestOperations, IFuseRenameWithFlags, IFuseInitWithConfig
@@ -159,6 +222,10 @@ internal static class Program
     {
         public int RenameCalls;
         public int InitCalls;
+        public int UTimeCalls;
+        public string LastUTimePath = "";
+        public TimeSpec LastAtime;
+        public TimeSpec LastMtime;
         public Dictionary<string, string> Files = new() { ["/from"] = "source", ["/to"] = "destination" };
 
         public PosixResult Rename(ReadOnlyNativeMemory<byte> from, ReadOnlyNativeMemory<byte> to)
@@ -191,7 +258,14 @@ internal static class Program
         public PosixResult SymLink(ReadOnlyNativeMemory<byte> from, ReadOnlyNativeMemory<byte> to) => PosixResult.ENOSYS;
         public PosixResult Flush(ReadOnlyNativeMemory<byte> path, ref FuseFileInfo info) => PosixResult.ENOSYS;
         public PosixResult Truncate(ReadOnlyNativeMemory<byte> path, long size) => PosixResult.ENOSYS;
-        public PosixResult UTime(ReadOnlyNativeMemory<byte> path, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo info) => PosixResult.ENOSYS;
+        public PosixResult UTime(ReadOnlyNativeMemory<byte> path, TimeSpec atime, TimeSpec mtime, ref FuseFileInfo info)
+        {
+            UTimeCalls++;
+            LastUTimePath = FuseHelper.GetString(path);
+            LastAtime = atime;
+            LastMtime = mtime;
+            return PosixResult.Success;
+        }
         public PosixResult Create(ReadOnlyNativeMemory<byte> path, int mode, ref FuseFileInfo info) => PosixResult.ENOSYS;
         public PosixResult IoCtl(ReadOnlyNativeMemory<byte> path, int cmd, nint arg, ref FuseFileInfo info, FuseIoctlFlags flags, nint data) => PosixResult.ENOSYS;
         public PosixResult ChMod(NativeMemory<byte> path, PosixFileMode mode) => PosixResult.ENOSYS;
